@@ -1,0 +1,372 @@
+# Feature Development Workflow
+# This workflow defines the end-to-end process for developing a new feature
+
+name: Feature Development Workflow
+version: 1.0
+description: Gated handoff workflow for feature development from requirements to deployment
+
+# Workflow stages with validation gates
+stages:
+  # ============================================================================
+  # Stage 1: Requirements Gathering
+  # ============================================================================
+  - name: requirements
+    description: Gather and document feature requirements
+    agent: requirements-analyst
+    trigger: manual # Started by Project Manager or user request
+
+    inputs:
+      - High-level feature description
+      - User stories (if available)
+      - Business constraints from docs/00-PROJECT/CONSTRAINTS.md
+
+    outputs:
+      - specs/features/[feature-name]/SPEC.md
+      - specs/features/[feature-name]/ACCEPTANCE.md
+
+    tasks:
+      - Document user stories
+      - Define acceptance criteria
+      - Identify dependencies
+      - Document constraints
+      - Clarify ambiguities with user
+
+    validation_gate:
+      name: Requirements Approval Gate
+      checklist:
+        - SPEC.md exists and is complete
+        - All user stories have acceptance criteria
+        - Technical approach is clearly defined
+        - No ambiguous requirements (no TBD, TODO)
+        - All constraints documented
+        - Dependencies identified
+        - User approval obtained (if required)
+
+      on_failure:
+        action: return_to_requirements_analyst
+        message: "Validation failed. Address gaps and resubmit."
+
+      on_success:
+        next_stage: design
+
+  # ============================================================================
+  # Stage 2: Technical Design
+  # ============================================================================
+  - name: design
+    description: Create technical design from requirements
+    agent: designer
+    trigger: requirements_gate_passed
+
+    inputs:
+      - specs/features/[feature-name]/SPEC.md
+      - specs/features/[feature-name]/ACCEPTANCE.md
+      - docs/01-ARCHITECTURE/BLUEPRINT.md
+      - docs/02-DESIGN/TECHNICAL.md
+
+    outputs:
+      - specs/features/[feature-name]/DESIGN.md
+      - docs/02-DESIGN/* (if architectural changes)
+
+    tasks:
+      - Design API endpoints (if backend feature)
+      - Design database schema (if data changes needed)
+      - Design component hierarchy (if frontend feature)
+      - Design data flow
+      - Document business logic migration plan (if applicable)
+      - Identify error scenarios
+      - Document authentication requirements
+
+    validation_gate:
+      name: Design Approval Gate
+      checklist:
+        - DESIGN.md exists and is complete
+        - All API endpoints documented (method, path, request, response, errors)
+        - Database schema complete (if applicable)
+        - Component hierarchy defined (if frontend)
+        - Business logic migration plan clear (if applicable)
+        - Data flow documented
+        - Error handling specified
+        - Authentication specified
+        - Dependencies resolved
+        - No design ambiguities
+
+      on_failure:
+        action: return_to_designer
+        message: "Design validation failed. Address gaps and resubmit."
+
+      on_success:
+        next_stage: implementation
+
+  # ============================================================================
+  # Stage 3: Implementation
+  # ============================================================================
+  - name: implementation
+    description: Implement frontend and backend code
+    agents: [frontend-engineer, backend-engineer]
+    trigger: design_gate_passed
+    parallel: true # Frontend and backend can work in parallel
+
+    inputs:
+      - specs/features/[feature-name]/DESIGN.md
+      - specs/tasks/[TASK-ID].md (created by Project Manager)
+      - Original source code (if migrating logic)
+
+    outputs:
+      frontend:
+        - app/**/page.tsx
+        - app/**/layout.tsx
+        - components/**/*.tsx
+        - hooks/**/*.ts
+
+      backend:
+        - app/api/**/*.ts
+        - lib/**/*.ts
+        - middleware.ts (if applicable)
+        - supabase/migrations/*.sql (if applicable)
+
+    tasks:
+      frontend:
+        - Create React components per design
+        - Implement client-side logic
+        - Ensure TypeScript type safety
+        - Handle loading and error states
+        - Implement responsive design
+
+      backend:
+        - Implement API routes per design
+        - Migrate business logic (preserve exactly)
+        - Create database queries
+        - Implement authentication checks
+        - Integrate external services
+        - Validate all inputs with Zod
+
+    validation_gate:
+      name: Implementation Quality Gate
+      checklist:
+        # Code Quality
+        - All code implemented per specification
+        - TypeScript strict mode passes (npm run type-check)
+        - No compilation errors (npm run build succeeds)
+        - No linting errors (npm run lint passes)
+        - Code follows project conventions
+
+        # Critical Business Logic
+        - Critical business logic preserved exactly (if applicable)
+        - Manual verification with sample inputs (if applicable)
+        - Output matches original implementation (if applicable)
+
+        # Frontend (if applicable)
+        - All components created
+        - Props match design
+        - Client/server components correctly marked
+        - Responsive design works
+        - Accessibility attributes present
+
+        # Backend (if applicable)
+        - All API routes created
+        - Request validation with Zod
+        - Error handling with try/catch
+        - Authentication checks on protected routes
+        - RLS policies enforced on queries
+
+        # Integration
+        - Dependencies resolved
+        - Integrates with existing codebase
+        - Environment variables documented
+
+      on_failure:
+        action: return_to_appropriate_engineer
+        message: "Implementation validation failed. Fix issues and resubmit."
+
+      on_success:
+        next_stage: testing
+
+  # ============================================================================
+  # Stage 4: Testing
+  # ============================================================================
+  - name: testing
+    description: Write and execute test suite
+    agent: tester
+    trigger: implementation_gate_passed
+
+    inputs:
+      - All implementation outputs
+      - specs/features/[feature-name]/SPEC.md
+      - specs/features/[feature-name]/ACCEPTANCE.md
+      - specs/features/[feature-name]/DESIGN.md
+
+    outputs:
+      - tests/unit/[feature]/*.test.ts
+      - tests/integration/[feature]/*.test.ts
+      - tests/e2e/[feature]/*.spec.ts (if critical workflow)
+      - specs/features/[feature-name]/TEST.md
+
+    tasks:
+      - Write unit tests for business logic
+      - Write integration tests for API routes
+      - Write E2E tests for critical workflows
+      - Verify test coverage >= 80% overall
+      - Verify test coverage = 100% on critical logic
+      - Execute all tests
+      - Document test results
+
+    validation_gate:
+      name: Testing Quality Gate
+      checklist:
+        # Test Execution
+        - All tests pass (npm run test)
+        - Unit tests written
+        - Integration tests written
+        - E2E tests written (if critical workflow)
+
+        # Coverage
+        - Overall coverage >= 80%
+        - Critical logic coverage = 100%
+        - No untested critical paths
+
+        # Test Quality
+        - Test names are clear and descriptive
+        - Tests actually verify behavior
+        - Edge cases tested
+        - Error scenarios tested
+        - External services properly mocked
+
+        # Critical Logic Verification
+        - Spoken punctuation tests pass (if applicable)
+        - Contradiction cleaning verified (if applicable)
+        - Model fallback works (if applicable)
+        - Template integration correct (if applicable)
+
+        # Performance
+        - API response times acceptable
+        - No performance regressions
+        - Database queries optimized
+
+      on_failure:
+        action: |
+          If tests fail: return to appropriate engineer
+          If coverage low: write more tests
+          If performance issues: optimize
+
+      on_success:
+        next_stage: completion
+
+  # ============================================================================
+  # Stage 5: Feature Completion
+  # ============================================================================
+  - name: completion
+    description: Finalize and document feature
+    agent: project-manager
+    trigger: testing_gate_passed
+
+    tasks:
+      - Update docs/03-IMPLEMENTATION/STATUS.md
+      - Mark feature complete
+      - Record actual time spent
+      - Document learnings or deviations
+      - Archive task files
+      - Obtain user approval (if required)
+      - Create git commit
+
+    validation_gate:
+      name: Feature Completion Gate
+      checklist:
+        - All previous gates passed
+        - STATUS.md updated
+        - All acceptance criteria met
+        - Documentation updated
+        - No open blockers
+        - User approval obtained (if required)
+
+      on_failure:
+        action: resolve_issues
+        message: "Cannot complete feature with open issues."
+
+      on_success:
+        next_stage: deployment # Or next feature
+
+# ============================================================================
+# Handoff Documentation Template
+# ============================================================================
+handoff_documentation:
+  template: |
+    ## Handoff: [From Stage] → [To Stage]
+    **Date**: YYYY-MM-DD HH:MM
+    **Feature**: [Feature Name]
+    **Validator**: [Agent Name]
+    **Result**: ✅ PASSED / ❌ FAILED
+
+    ### Validation Checklist Results
+    [List all checklist items with checkmarks]
+
+    ### Notes
+    [Any relevant notes or observations]
+
+    ### Next Steps
+    [What the next agent should focus on]
+
+# ============================================================================
+# Error Handling
+# ============================================================================
+error_handling:
+  validation_failure:
+    1. Document specific gaps or issues
+    2. Create or update blocker in STATUS.md
+    3. Delegate back to appropriate agent with clear instructions
+    4. Track progress on resolving issue
+    5. Re-run validation after fix
+
+  blocking_issue:
+    1. Document in STATUS.md under "Active Blockers"
+    2. Identify root cause
+    3. Determine if user escalation needed
+    4. Assign to appropriate agent or user
+    5. Track until resolved
+
+# ============================================================================
+# Parallel Execution Rules
+# ============================================================================
+parallel_execution:
+  - Frontend and Backend can work simultaneously after design approval
+  - Both must complete before testing begins
+  - Both must pass validation independently
+  - Integration issues are resolved collaboratively
+
+# ============================================================================
+# Workflow Metrics
+# ============================================================================
+metrics:
+  track:
+    - Time spent in each stage
+    - Number of validation failures per gate
+    - Number of iterations required
+    - Total feature completion time
+    - Test coverage achieved
+    - Blockers encountered and resolution time
+
+  targets:
+    - < 2 validation failures per gate
+    - < 1 week per feature (average)
+    - 80%+ test coverage
+    - < 24 hours blocker resolution time
+
+# ============================================================================
+# Notification Points
+# ============================================================================
+notifications:
+  user_approval_required:
+    - After requirements stage (if new feature)
+    - After feature completion (before next feature)
+    - When validation gates fail repeatedly (> 2 times)
+    - When blockers cannot be resolved by agents
+
+  status_updates:
+    - When each stage completes
+    - When validation gates are reached
+    - When blockers are encountered
+    - At end of each day (progress summary)
+
+---
+# Last Updated: October 2025
+# Version: 1.0
+# Owner: Project Manager Agent

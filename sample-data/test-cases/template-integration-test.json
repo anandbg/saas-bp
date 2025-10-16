@@ -1,0 +1,94 @@
+{
+  "test_name": "Template Integration - X-Ray Spine with Fracture",
+  "test_description": "Tests template integration logic where user findings conflict with template normals",
+  "mode": "espresso",
+  "inputs": {
+    "scan_type": "X-Ray Lumbar Spine",
+    "clinical_history": "68-year-old female with back pain after fall from standing height",
+    "findings": "There is a compression fracture of the L1 vertebral body with approximately 30% height loss. Degenerative changes are noted at multiple levels with disc space narrowing at L4-L5 and L5-S1. Facet joint arthropathy is present at L4-L5.",
+    "comparison": "None available",
+    "template_name": "X-Ray Lumbar Spine",
+    "include_advice": true,
+    "include_questions": false,
+    "include_differential": true
+  },
+  "template_content": "LUMBAR SPINE X-RAY - AP AND LATERAL\n\nTECHNIQUE: AP and lateral radiographs of the lumbar spine were obtained.\n\nCOMPARISON: None available.\n\nFINDINGS:\nAlignment is anatomic. No evidence of acute fracture or dislocation. Vertebral body heights are maintained. Intervertebral disc spaces are preserved. No significant degenerative changes. Pedicles and posterior elements are intact. No spondylolisthesis. Visualized soft tissues are unremarkable.\n\nIMPRESSION:\nNo acute osseous abnormality of the lumbar spine.",
+  "expected_results": {
+    "generation_time": "< 10 seconds",
+    "model_used": "gpt-5 or gpt-4o-mini",
+    "template_integration": "Should adapt template to accommodate findings",
+    "adaptation_examples": [
+      {
+        "template_says": "No evidence of acute fracture or dislocation",
+        "user_says": "compression fracture of L1",
+        "expected_output": "There is a compression fracture of the L1 vertebral body. No evidence of acute fracture or dislocation at other levels."
+      },
+      {
+        "template_says": "Vertebral body heights are maintained",
+        "user_says": "30% height loss at L1",
+        "expected_output": "L1 vertebral body shows 30% height loss. Vertebral body heights are maintained at other levels."
+      },
+      {
+        "template_says": "No significant degenerative changes",
+        "user_says": "Degenerative changes at multiple levels",
+        "expected_output": "Degenerative changes are noted at multiple levels with disc space narrowing at L4-L5 and L5-S1."
+      }
+    ],
+    "no_contradictions": [
+      "Should NOT say 'vertebral body heights are maintained' when fracture causes height loss",
+      "Should NOT say 'no fracture' when L1 fracture is present",
+      "Should NOT say 'no degenerative changes' when degenerative changes are present"
+    ],
+    "preserved_normals": [
+      "Alignment is otherwise anatomic (or 'otherwise maintained')",
+      "Pedicles and posterior elements are intact",
+      "No spondylolisthesis",
+      "Visualized soft tissues are unremarkable"
+    ]
+  },
+  "verification_steps": [
+    "Confirm L1 fracture is prominently mentioned in findings",
+    "Verify template normals are adapted not deleted (e.g., 'no fracture at OTHER levels')",
+    "Check that degenerative changes are integrated smoothly",
+    "Ensure 'alignment is otherwise maintained' appears (not just deleted)",
+    "Verify preserved normals (pedicles, no spondylolisthesis) are retained",
+    "Confirm no 'Pertinent Negatives' heading appears",
+    "Check that findings read as one flowing narrative",
+    "Verify impression accurately summarizes both abnormal and adapted normal findings"
+  ],
+  "success_criteria": {
+    "accuracy": "All user findings accurately represented",
+    "integration": "Template normals adapted with qualifiers like 'otherwise' or 'at other levels'",
+    "no_contradictions": "No statements contradict findings in same organ system",
+    "completeness": "Both abnormal findings AND adapted normals are present",
+    "narrative_style": "Single flowing paragraph, not separate sections",
+    "forbidden_patterns": "No 'Pertinent Negatives' or similar headings",
+    "consistency": "Internally consistent within vertebral column system"
+  },
+  "integration_test_matrix": [
+    {
+      "finding_type": "Fracture at specific level",
+      "template_normal": "No fracture",
+      "expected_adaptation": "Fracture at [level]. No fracture at other levels.",
+      "failure_pattern": "Still says 'No fracture' without qualification"
+    },
+    {
+      "finding_type": "Height loss at specific level",
+      "template_normal": "Vertebral body heights maintained",
+      "expected_adaptation": "Height loss at [level]. Heights maintained at other levels.",
+      "failure_pattern": "Still says 'heights maintained' without qualification"
+    },
+    {
+      "finding_type": "Degenerative changes present",
+      "template_normal": "No significant degenerative changes",
+      "expected_adaptation": "Degenerative changes at [levels]",
+      "failure_pattern": "Still says 'no degenerative changes'"
+    },
+    {
+      "finding_type": "Normal finding in template not mentioned by user",
+      "template_normal": "No spondylolisthesis",
+      "expected_adaptation": "No spondylolisthesis (should be retained as-is)",
+      "failure_pattern": "Deleted this normal finding unnecessarily"
+    }
+  ]
+}

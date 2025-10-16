@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# Commit-msg hook for Radiology Reporting App
+# Validates commit messages follow conventional commits format
+
+# Exit on error
+set -e
+
+# ANSI color codes
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+echo -e "${YELLOW}Validating commit message format...${NC}"
+
+# Allow merge and revert commits
+if echo "$COMMIT_MSG" | grep -qE "^(Merge|Revert)"; then
+  echo -e "${GREEN}✓ Merge/Revert commit - validation skipped${NC}"
+  exit 0
+fi
+
+# Conventional commit pattern:
+# type(scope): subject
+#
+# type: feat, fix, docs, style, refactor, test, chore, perf, ci, build
+# scope: optional, any word
+# subject: at least 10 characters
+PATTERN="^(feat|fix|docs|style|refactor|test|chore|perf|ci|build)(\(.+\))?: .{10,}"
+
+if ! echo "$COMMIT_MSG" | grep -qE "$PATTERN"; then
+  echo -e "${RED}ERROR: Invalid commit message format${NC}"
+  echo ""
+  echo "Commit message must follow conventional commits format:"
+  echo ""
+  echo "  <type>(<scope>): <subject>"
+  echo ""
+  echo "Types:"
+  echo "  feat     - New feature"
+  echo "  fix      - Bug fix"
+  echo "  docs     - Documentation changes"
+  echo "  style    - Code formatting (no logic changes)"
+  echo "  refactor - Code refactoring"
+  echo "  test     - Adding or updating tests"
+  echo "  chore    - Maintenance tasks"
+  echo "  perf     - Performance improvements"
+  echo "  ci       - CI/CD changes"
+  echo "  build    - Build system changes"
+  echo ""
+  echo "Scope (optional but recommended):"
+  echo "  auth, database, api, ui, transcription, reports, templates, billing, etc."
+  echo ""
+  echo "Subject:"
+  echo "  - Must be at least 10 characters"
+  echo "  - Use imperative mood (\"Add feature\" not \"Added feature\")"
+  echo "  - No period at the end"
+  echo ""
+  echo "Examples:"
+  echo "  feat(auth): Implement Supabase authentication flow"
+  echo "  fix(api): Handle OpenAI rate limiting errors"
+  echo "  docs: Update Git workflow documentation"
+  echo "  test(reports): Add unit tests for report generator"
+  echo ""
+  echo "Your commit message:"
+  echo "  $COMMIT_MSG"
+  echo ""
+  exit 1
+fi
+
+echo -e "${GREEN}✓ Commit message format is valid${NC}"
+exit 0

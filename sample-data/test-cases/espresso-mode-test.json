@@ -1,0 +1,52 @@
+{
+  "test_name": "Espresso Mode - CT Chest with Nodule",
+  "test_description": "Tests fast report generation with template integration for a CT chest scan with significant findings",
+  "mode": "espresso",
+  "inputs": {
+    "scan_type": "CT Chest",
+    "clinical_history": "55-year-old male smoker with persistent cough for 3 months",
+    "findings": "There is a 2.5 cm spiculated nodule in the right upper lobe at the level of the 3rd rib. Multiple small nodules measuring up to 5 mm are scattered throughout both lung fields. Mediastinal lymph nodes are enlarged, the largest measuring 1.8 cm in the right paratracheal region. Small right pleural effusion is noted.",
+    "comparison": "CT chest from 6 months ago showed no nodules",
+    "template_name": "CT Chest Standard",
+    "include_advice": true,
+    "include_questions": true,
+    "include_differential": true
+  },
+  "expected_results": {
+    "generation_time": "< 10 seconds",
+    "model_used": "gpt-5 or gpt-4o-mini (fallback)",
+    "temperature": 0.3,
+    "max_tokens": 4000,
+    "sections_present": [
+      "technique",
+      "comparison",
+      "findings",
+      "impression",
+      "clinical_advice",
+      "clinician_questions",
+      "differential_diagnosis"
+    ],
+    "findings_integration": "Should merge template normal findings (heart size, no pneumothorax) with user's abnormal findings (nodules, lymph nodes, effusion)",
+    "no_contradictions": "Should not say 'lungs are clear' when nodules are present",
+    "critical_findings": "Should identify spiculated nodule as suspicious",
+    "differential_count": 3
+  },
+  "verification_steps": [
+    "Check that nodules are mentioned prominently in findings",
+    "Verify template normal findings are integrated (heart size normal, no pneumothorax)",
+    "Ensure no contradictory statements (e.g., 'lungs clear' vs 'nodules present')",
+    "Confirm clinical advice includes PET-CT and biopsy recommendations",
+    "Verify differential diagnosis includes lung cancer considerations",
+    "Check that comparison with prior study is mentioned",
+    "Ensure generation time is within expected range",
+    "Verify no 'Pertinent Negatives' heading appears"
+  ],
+  "success_criteria": {
+    "accuracy": "All significant findings from input are present in output",
+    "integration": "Template normals are adapted, not contradicted",
+    "completeness": "All requested sections are present",
+    "consistency": "No internal contradictions within organ systems",
+    "timeliness": "Generation completes within 10 seconds",
+    "format": "Valid JSON structure with all expected fields"
+  }
+}

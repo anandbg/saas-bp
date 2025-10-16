@@ -1,0 +1,76 @@
+{
+  "test_name": "Slow-Brewed Mode - MRI Brain with Mass",
+  "test_description": "Tests detailed report generation with comprehensive reasoning for a critical brain finding",
+  "mode": "slow_brewed",
+  "inputs": {
+    "scan_type": "MRI Brain",
+    "clinical_history": "42-year-old female with new onset seizures and headaches for 2 weeks",
+    "findings": "There is a 3 cm enhancing mass in the left frontal lobe with surrounding vasogenic edema. Midline shift of approximately 5 mm to the right. Mild compression of the left lateral ventricle.",
+    "comparison": "None available",
+    "template_name": "MRI Brain Standard",
+    "include_advice": true,
+    "include_questions": true,
+    "include_differential": true
+  },
+  "expected_results": {
+    "generation_time": "< 30 seconds",
+    "model_used": "o3 or gpt-4o (fallback)",
+    "temperature": 0.1,
+    "max_tokens": 8000,
+    "sections_present": [
+      "technique",
+      "comparison",
+      "findings",
+      "impression",
+      "clinical_advice",
+      "clinician_questions",
+      "differential_diagnosis"
+    ],
+    "detail_level": "Comprehensive with detailed anatomical descriptions and reasoning",
+    "critical_findings": "Should flag mass effect and midline shift as urgent findings",
+    "differential_count": 5
+  },
+  "verification_steps": [
+    "Check for comprehensive anatomical descriptions",
+    "Verify critical findings (mass effect, midline shift) are prominently mentioned",
+    "Ensure detailed differential diagnosis with 5 options",
+    "Confirm clinical advice includes urgent neurosurgery consultation",
+    "Verify questions address biopsy, treatment planning, and prognosis",
+    "Check that template normal findings for posterior fossa are retained",
+    "Ensure generation time is within expected range",
+    "Verify detailed reasoning for each differential diagnosis",
+    "Confirm no contradictions (e.g., 'no mass' vs 'mass present')"
+  ],
+  "success_criteria": {
+    "accuracy": "All critical findings accurately described with measurements",
+    "detail": "Comprehensive descriptions with spatial relationships",
+    "integration": "Template normals integrated without contradiction",
+    "urgency": "Critical findings clearly flagged",
+    "reasoning": "Detailed reasoning for each differential diagnosis",
+    "completeness": "All 5 differential diagnoses with detailed explanations",
+    "timeliness": "Generation completes within 30 seconds",
+    "format": "Valid JSON with comprehensive content in all fields"
+  },
+  "expected_differential_diagnoses": [
+    {
+      "diagnosis": "High-grade glioma (glioblastoma)",
+      "key_features": "Ring enhancement, vasogenic edema, mass effect"
+    },
+    {
+      "diagnosis": "Brain metastasis",
+      "key_features": "Solitary enhancing mass, vasogenic edema, need to search for primary"
+    },
+    {
+      "diagnosis": "Primary CNS lymphoma",
+      "key_features": "Enhancing mass, immunocompromised status consideration"
+    },
+    {
+      "diagnosis": "Brain abscess",
+      "key_features": "Ring enhancement, clinical correlation with infection history"
+    },
+    {
+      "diagnosis": "Atypical meningioma",
+      "key_features": "Less likely without dural attachment but possible"
+    }
+  ]
+}

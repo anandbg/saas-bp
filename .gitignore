@@ -1,0 +1,129 @@
+# ==============================================================================
+# GITIGNORE FOR RADIOLOGY REPORTING APP SETUP
+# ==============================================================================
+
+# Credentials and Secrets (CRITICAL - NEVER COMMIT THESE)
+credentials.env
+.env
+.env.local
+.env.production
+.env.development
+*.pem
+*.key
+*.p12
+
+# API Keys and Tokens
+*_api_key*
+*_secret*
+*_token*
+api-keys/
+secrets/
+
+# Service Account Files
+service-account*.json
+google-credentials*.json
+firebase-adminsdk*.json
+
+# Supabase
+.supabase/
+
+# Vercel
+.vercel
+
+# Audio Files (too large for git)
+sample-data/audio/*.mp3
+sample-data/audio/*.wav
+sample-data/audio/*.m4a
+sample-data/audio/*.ogg
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# Logs
+logs/
+*.log
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.project
+.classpath
+.settings/
+
+# Temporary Files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Generated Files
+*.generated.*
+*.auto.*
+
+# Backup Files
+*.backup
+*.bak
+*.old
+*~
+
+# Database Files
+*.sqlite
+*.sqlite3
+*.db
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing
+jest-report/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Misc
+*.code-workspace
+
+# ==============================================================================
+# ALLOW THESE TEMPLATE FILES (They're safe and needed)
+# ==============================================================================
+!credentials.env.template
+!sample-data/
+!sample-data/**/*.txt
+!sample-data/**/*.sql
+!sample-data/**/*.json
+!sample-data/**/*.md
