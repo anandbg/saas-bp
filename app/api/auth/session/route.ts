@@ -3,13 +3,16 @@
  *
  * Returns the current session information.
  * Used by client components to check authentication status.
+ *
+ * FEATURE FLAG: Requires NEXT_PUBLIC_ENABLE_AUTH=true
  */
 
 import { createSupabaseServerClient } from '@/lib/database/supabase-server';
 import { getUserProfile } from '@/lib/auth/session';
 import { handleApiError, successResponse, errorResponse } from '@/lib/auth/api-protection';
+import { withFeatureGate } from '@/lib/api/feature-gate';
 
-export async function GET() {
+export const GET = withFeatureGate('AUTH', async () => {
   try {
     const supabase = createSupabaseServerClient();
 
@@ -39,4 +42,4 @@ export async function GET() {
   } catch (error) {
     return handleApiError(error);
   }
-}
+});

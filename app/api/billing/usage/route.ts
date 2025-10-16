@@ -4,12 +4,15 @@
  * GET /api/billing/usage
  * Retrieves current usage statistics and limits for authenticated user
  *
+ * FEATURE FLAG: Requires NEXT_PUBLIC_ENABLE_STRIPE=true
+ *
  * @module app/api/billing/usage
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest, handleApiError } from '@/lib/auth/api-protection';
 import { getUserUsageStats, getUsageStats } from '@/lib/billing';
+import { withFeatureGate } from '@/lib/api/feature-gate';
 import type { UsageType } from '@/lib/billing/types';
 
 // =============================================================================
@@ -39,7 +42,7 @@ import type { UsageType } from '@/lib/billing/types';
  * const response = await fetch('/api/billing/usage?usageType=report_generated');
  * ```
  */
-export async function GET(request: NextRequest) {
+export const GET = withFeatureGate('STRIPE', async (request: NextRequest) => {
   try {
     // 1. Get authenticated user
     const user = getUserFromRequest(request);
@@ -99,7 +102,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     return handleApiError(error);
   }
-}
+});
 
 /**
  * POST method not allowed

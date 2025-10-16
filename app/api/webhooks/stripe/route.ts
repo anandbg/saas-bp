@@ -7,11 +7,14 @@
  * IMPORTANT: This endpoint does NOT require authentication
  * Security is provided by webhook signature verification
  *
+ * FEATURE FLAG: Requires NEXT_PUBLIC_ENABLE_STRIPE=true
+ *
  * @module app/api/webhooks/stripe
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyWebhookSignature, routeWebhookEvent } from '@/lib/billing';
+import { FEATURES } from '@/lib/config/features';
 import type Stripe from 'stripe';
 
 // =============================================================================
@@ -52,6 +55,18 @@ export const runtime = 'nodejs';
  * ```
  */
 export async function POST(request: NextRequest) {
+  // Check if Stripe feature is enabled
+  if (!FEATURES.STRIPE) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Stripe webhooks are disabled',
+        code: 'feature_disabled',
+      },
+      { status: 404 }
+    );
+  }
+
   const startTime = Date.now();
 
   try {

@@ -4,12 +4,15 @@
  * POST /api/billing/checkout
  * Creates a Stripe Checkout session for subscription purchase
  *
+ * FEATURE FLAG: Requires NEXT_PUBLIC_ENABLE_STRIPE=true
+ *
  * @module app/api/billing/checkout
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest, handleApiError } from '@/lib/auth/api-protection';
 import { validatePriceId, createCheckoutSession } from '@/lib/billing';
+import { withFeatureGate } from '@/lib/api/feature-gate';
 import { z } from 'zod';
 
 // =============================================================================
@@ -50,7 +53,7 @@ const CheckoutRequestSchema = z.object({
  * // Redirect to url
  * ```
  */
-export async function POST(request: NextRequest) {
+export const POST = withFeatureGate('STRIPE', async (request: NextRequest) => {
   try {
     // 1. Get authenticated user
     const user = getUserFromRequest(request);
@@ -106,7 +109,7 @@ export async function POST(request: NextRequest) {
     // Handle other errors
     return handleApiError(error);
   }
-}
+});
 
 /**
  * GET method not allowed

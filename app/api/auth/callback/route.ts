@@ -3,13 +3,16 @@
  *
  * OAuth callback handler for Google and GitHub authentication.
  * Exchanges authorization code for session tokens and creates user profile.
+ *
+ * FEATURE FLAG: Requires NEXT_PUBLIC_ENABLE_AUTH=true
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/database/supabase-server';
 import { syncAuthUser } from '@/lib/auth/session';
+import { withFeatureGate } from '@/lib/api/feature-gate';
 
-export async function GET(request: NextRequest) {
+export const GET = withFeatureGate('AUTH', async (request: NextRequest) => {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
   const error = requestUrl.searchParams.get('error');
@@ -73,4 +76,4 @@ export async function GET(request: NextRequest) {
     loginUrl.searchParams.set('message', 'An unexpected error occurred');
     return NextResponse.redirect(loginUrl);
   }
-}
+});

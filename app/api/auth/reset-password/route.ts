@@ -3,14 +3,17 @@
  *
  * Requests a password reset email for the given address.
  * Always returns success to prevent email enumeration attacks.
+ *
+ * FEATURE FLAG: Requires NEXT_PUBLIC_ENABLE_AUTH=true
  */
 
 import { NextRequest } from 'next/server';
 import { createSupabaseBrowserClient } from '@/lib/database/supabase-browser';
 import { resetPasswordSchema } from '@/lib/auth/validation';
 import { errorResponse, successResponse } from '@/lib/auth/api-protection';
+import { withFeatureGate } from '@/lib/api/feature-gate';
 
-export async function POST(request: NextRequest) {
+export const POST = withFeatureGate('AUTH', async (request: NextRequest) => {
   try {
     // Parse and validate request body
     const body = (await request.json()) as unknown;
@@ -50,4 +53,4 @@ export async function POST(request: NextRequest) {
       message: 'If that email exists, we sent a password reset link',
     });
   }
-}
+});

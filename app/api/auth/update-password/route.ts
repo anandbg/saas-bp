@@ -3,6 +3,8 @@
  *
  * Updates the user's password.
  * Requires authentication. Invalidates all existing sessions.
+ *
+ * FEATURE FLAG: Requires NEXT_PUBLIC_ENABLE_AUTH=true
  */
 
 import { NextRequest } from 'next/server';
@@ -14,8 +16,9 @@ import {
   successResponse,
   getUserFromRequest,
 } from '@/lib/auth/api-protection';
+import { withFeatureGate } from '@/lib/api/feature-gate';
 
-export async function POST(request: NextRequest) {
+export const POST = withFeatureGate('AUTH', async (request: NextRequest) => {
   try {
     // Get authenticated user from middleware headers
     const user = getUserFromRequest(request);
@@ -72,4 +75,4 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return handleApiError(error);
   }
-}
+});

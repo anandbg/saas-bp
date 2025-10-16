@@ -2,11 +2,14 @@
  * Next.js Middleware for Route Protection and Session Management
  *
  * This middleware runs on every request and:
- * 1. Validates user sessions using Supabase Auth
+ * 1. Validates user sessions using Supabase Auth (when AUTH feature enabled)
  * 2. Refreshes expired tokens automatically
  * 3. Protects routes that require authentication
  * 4. Adds user context to request headers for Server Components and API routes
  * 5. Handles redirects for authenticated/unauthenticated users
+ *
+ * FEATURE FLAGS: This middleware is OPTIONAL and controlled by NEXT_PUBLIC_ENABLE_AUTH.
+ * When auth is disabled, all routes are accessible without authentication.
  *
  * SECURITY NOTE: Uses getUser() instead of getSession() for server-side
  * validation. getUser() validates the JWT with Supabase server, while
@@ -16,6 +19,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '@/types/database';
+import { FEATURES } from '@/lib/config/features';
 
 /**
  * Routes that don't require authentication
@@ -113,6 +117,11 @@ function isProtectedApiRoute(pathname: string): boolean {
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // If authentication is disabled, allow all requests through
+  if (!FEATURES.AUTH) {
+    return NextResponse.next();
+  }
 
   // Skip middleware for public routes
   if (isPublicRoute(pathname) && !isProtectedRoute(pathname)) {

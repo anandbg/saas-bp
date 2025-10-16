@@ -3,6 +3,8 @@
  *
  * Authenticates a user with email and password.
  * Creates a session stored in HTTP-only cookies.
+ *
+ * FEATURE FLAG: Requires NEXT_PUBLIC_ENABLE_AUTH=true
  */
 
 import { NextRequest } from 'next/server';
@@ -10,8 +12,9 @@ import { createSupabaseServerClient } from '@/lib/database/supabase-server';
 import { loginSchema } from '@/lib/auth/validation';
 import { handleApiError, errorResponse, successResponse } from '@/lib/auth/api-protection';
 import { getUserProfile } from '@/lib/auth/session';
+import { withFeatureGate } from '@/lib/api/feature-gate';
 
-export async function POST(request: NextRequest) {
+export const POST = withFeatureGate('AUTH', async (request: NextRequest) => {
   try {
     // Parse and validate request body
     const body = (await request.json()) as unknown;
@@ -84,4 +87,4 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return handleApiError(error);
   }
-}
+});

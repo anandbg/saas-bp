@@ -3,14 +3,17 @@
  *
  * Creates a new user account with email and password.
  * Sends a verification email to the provided address.
+ *
+ * FEATURE FLAG: Requires NEXT_PUBLIC_ENABLE_AUTH=true
  */
 
 import { NextRequest } from 'next/server';
 import { createSupabaseBrowserClient } from '@/lib/database/supabase-browser';
 import { signupSchema } from '@/lib/auth/validation';
 import { handleApiError, errorResponse, successResponse } from '@/lib/auth/api-protection';
+import { withFeatureGate } from '@/lib/api/feature-gate';
 
-export async function POST(request: NextRequest) {
+export const POST = withFeatureGate('AUTH', async (request: NextRequest) => {
   try {
     // Parse and validate request body
     const body = (await request.json()) as unknown;
@@ -71,4 +74,4 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return handleApiError(error);
   }
-}
+});
