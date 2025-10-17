@@ -29,6 +29,7 @@ export const FEATURES = {
   MCP_VALIDATION: false, // Disabled - slows down generation
   AI_GENERATION: true,
   WEB_SEARCH: process.env.PERPLEXITY_API_KEY ? true : false, // Feature 6.0
+  GPT5_ENABLED: process.env.GPT5_ENABLED === 'true', // Feature 7.0
 } as const;
 
 /**
