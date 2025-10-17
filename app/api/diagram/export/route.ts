@@ -125,7 +125,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Return file with appropriate headers
-    return new NextResponse(Buffer.from(buffer), {
+    // Convert Buffer to Uint8Array for NextResponse
+    return new NextResponse(new Uint8Array(buffer), {
       status: 200,
       headers: {
         'Content-Type': mimeType,
