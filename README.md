@@ -1,10 +1,10 @@
-# Radiology Reporting App
+# AI Diagram & Illustration Generator
 
-> AI-powered radiology report generation with audio transcription and template integration
+> AI-powered diagram generation with natural language, file context, and automated validation
 
-[![Status](https://img.shields.io/badge/status-phase--0--pre--development-yellow)]()
-[![Stack](https://img.shields.io/badge/stack-Next.js%2014%2B%20|%20Supabase%20|%20Stripe-blue)]()
-[![AI](https://img.shields.io/badge/AI-OpenAI%20GPT--5%20|%20Whisper-green)]()
+[![Status](https://img.shields.io/badge/status-phase--3--complete-green)]()
+[![Stack](https://img.shields.io/badge/stack-Next.js%2014%2B%20|%20OpenAI%20|%20MCP-blue)]()
+[![AI](https://img.shields.io/badge/AI-OpenAI%20GPT--4%20|%20GPT--4V-green)]()
 
 ---
 
@@ -18,8 +18,7 @@
 ### 📚 Documentation
 - **Project Requirements**: [`docs/00-PROJECT/REQUIREMENTS.md`](docs/00-PROJECT/REQUIREMENTS.md)
 - **Technical Constraints**: [`docs/00-PROJECT/CONSTRAINTS.md`](docs/00-PROJECT/CONSTRAINTS.md)
-- **Architecture Blueprint**: [`docs/01-ARCHITECTURE/BLUEPRINT.md`](docs/01-ARCHITECTURE/BLUEPRINT.md)
-- **Technical Design**: [`docs/02-DESIGN/TECHNICAL.md`](docs/02-DESIGN/TECHNICAL.md)
+- **Technical Design**: [`docs/02-DESIGN/DIAGRAM-GENERATOR-DESIGN.md`](docs/02-DESIGN/DIAGRAM-GENERATOR-DESIGN.md)
 - **Implementation Status**: [`docs/03-IMPLEMENTATION/STATUS.md`](docs/03-IMPLEMENTATION/STATUS.md)
 
 ### 🤖 Agent Configuration
@@ -34,19 +33,20 @@
 
 ### What is This?
 
-Migration and enhancement of a production radiology reporting application from Node.js/Express to modern Next.js 14+ stack with:
+An AI-powered web application that generates high-quality diagrams through conversational interactions:
 
-- ✨ **AI-Powered Report Generation**: GPT-5 (fast) and O3 (detailed) modes
-- 🎤 **Audio Transcription**: Voice-to-text with spoken punctuation conversion
-- 📝 **Smart Templates**: Contradiction-free template integration
-- 💳 **Subscription Billing**: Stripe-powered tiered pricing
-- 🔐 **Secure Authentication**: Supabase Auth with OAuth support
+- 💬 **Conversational Interface**: Describe diagrams in natural language
+- 📁 **Multi-Format Input**: Upload PDFs, DOCX, PPTX, XLSX, CSV, images for context
+- ✅ **Automated Validation**: MCP Playwright ensures quality before delivery
+- 🔄 **Feedback Loop**: Automatic improvement iterations (max 5) until perfect
+- 🎨 **Professional Design**: Linear/Stripe/Vercel-inspired aesthetics
+- 📤 **Multi-Format Export**: PPTX, PDF, PNG, HTML, clipboard
 
 ### Current Status
 
-**Phase**: Pre-Development (Phase 0)
-**Progress**: Repository restructured for agent-driven development
-**Next Step**: Phase 1 - Foundation & Authentication
+**Phase**: Phase 3 Complete ✅ → Phase 4 Next 🎯
+**Progress**: 40% (3 of 7 phases complete)
+**Next Step**: Phase 4 - State Management (custom hooks, sessionStorage, caching)
 
 See [`docs/03-IMPLEMENTATION/STATUS.md`](docs/03-IMPLEMENTATION/STATUS.md) for detailed progress tracking.
 
@@ -58,29 +58,30 @@ See [`docs/03-IMPLEMENTATION/STATUS.md`](docs/03-IMPLEMENTATION/STATUS.md) for d
 
 ```
 Frontend:  Next.js 14+ (App Router) + React 18+ + TypeScript 5+ + Tailwind CSS
-Backend:   Next.js API Routes + Vercel AI SDK 5
-Database:  Supabase (PostgreSQL 15+)
-Auth:      Supabase Auth (Email/Password + OAuth)
-Billing:   Stripe (Subscriptions + Customer Portal)
-AI:        OpenAI (GPT-5, O3, Whisper)
-Deploy:    Vercel (Edge Network)
+Backend:   Next.js API Routes (Stateless + Serverless)
+AI:        OpenAI GPT-4 Turbo + GPT-4V (Vision)
+Validation: MCP Playwright (Automated browser testing)
+Parsing:   pdf-parse, mammoth, xlsx, pptxgenjs
+Export:    pptxgenjs, html2canvas, Playwright PDF
+Deploy:    Vercel (Serverless Functions)
 ```
 
 ### Key Design Decisions
 
-- **Supabase Auth** (not Outseta): Cost savings + full control
-- **Stripe Direct** (not third-party): No platform fees
+- **Stateless Architecture**: No database, no auth, session-only storage
+- **MCP Validation**: Automated quality checks before showing diagrams
+- **Feature Flags**: Muted Supabase/Auth/Stripe from original boilerplate
+- **Prompt Engineering**: 19 mandatory rules for consistent AI output
 - **Agent-Driven Development**: Specialized agents with gated handoffs
-- **Critical Logic Preservation**: Exact migration of business logic
 
-See [`docs/01-ARCHITECTURE/DECISIONS.md`](docs/01-ARCHITECTURE/DECISIONS.md) for detailed ADR.
+See [`docs/02-DESIGN/DIAGRAM-GENERATOR-DESIGN.md`](docs/02-DESIGN/DIAGRAM-GENERATOR-DESIGN.md) for detailed design.
 
 ---
 
 ## 🗂️ Repository Structure
 
 ```
-radiology-ai-app/
+saas-bp/ (AI Diagram Generator)
 ├── .agents/                    # Agent configuration & instructions
 │   ├── AGENTS.md              # Agent registry and interaction patterns
 │   ├── project-manager/       # PM agent instructions
@@ -189,38 +190,36 @@ See [`.agents/AGENTS.md`](.agents/AGENTS.md) for complete agent documentation.
 
 - Node.js 18+
 - npm or pnpm
-- Supabase account
-- Stripe account
-- OpenAI API key
+- OpenAI API key (required)
+- No database or auth required (stateless)
 
 ### Setup
 
 1. **Clone and Install**
    ```bash
    git clone <repository-url>
-   cd radiology-ai-app
+   cd saas-bp
    npm install
    ```
 
 2. **Configure Environment**
    ```bash
-   cp credentials.env.template .env.local
-   # Edit .env.local with your credentials
+   cp .env.example .env.local
+   # Add your OpenAI API key:
+   echo "OPENAI_API_KEY=your_key_here" >> .env.local
+
+   # Feature flags (already set correctly):
+   # DATABASE=false
+   # AUTH=false
+   # STRIPE=false
    ```
 
-   See [`docs/04-OPERATIONS/SETUP.md`](docs/04-OPERATIONS/SETUP.md) for detailed setup instructions.
-
-3. **Verify Setup**
-   ```bash
-   ./scripts/verify-setup.sh
-   ```
-
-4. **Start Development Server**
+3. **Start Development Server**
    ```bash
    npm run dev
    ```
 
-   Open [http://localhost:3000](http://localhost:3000)
+   Open [http://localhost:3001](http://localhost:3001)
 
 ### Development Commands
 
@@ -242,55 +241,63 @@ npm run test:integration # Integration tests only
 npm run test:e2e         # E2E tests only
 npm run test:coverage    # Coverage report
 
-# Database (Supabase)
-npx supabase start       # Start local Supabase
-npx supabase db reset    # Reset local database
-npx supabase db push     # Apply migrations
 ```
 
 ---
 
 ## 📊 Project Status
 
-**Current Phase**: Phase 0 - Pre-Development
-**Overall Progress**: 0/23 features complete (0%)
-**Repository Status**: ✅ Restructured for agent-driven development
+**Current Phase**: Phase 4 - State Management (Next)
+**Overall Progress**: 40% (3/7 phases complete)
+**Repository Status**: ✅ Phase 3 Frontend Complete
 
 ### Implementation Phases
 
-| Phase | Status | Features | Est. Time | Progress |
-|-------|--------|----------|-----------|----------|
-| Phase 1: Foundation | ⏸️ Not Started | 0/7 | 18 hours | ░░░░░░░░░░ 0% |
-| Phase 2: Core Features | ⏸️ Not Started | 0/7 | 30 hours | ░░░░░░░░░░ 0% |
-| Phase 3: Advanced Features | ⏸️ Not Started | 0/4 | 18 hours | ░░░░░░░░░░ 0% |
-| Phase 4: Testing & Launch | ⏸️ Not Started | 0/5 | 22 hours | ░░░░░░░░░░ 0% |
-| **TOTAL** | **0%** | **0/23** | **88 hours** | ░░░░░░░░░░ 0% |
+| Phase | Status | Progress | Completion Date |
+|-------|--------|----------|-----------------|
+| Phase 1: Requirements & Design | ✅ Complete | 100% | January 2025 |
+| Phase 2: Foundation & Core | ✅ Complete | 100% | January 2025 |
+| Phase 3: Frontend Development | ✅ Complete | 100% | January 2025 |
+| Phase 4: State Management | 🎯 Next | 0% | - |
+| Phase 5: Export Functionality | ⏸️ Pending | 0% | - |
+| Phase 6: Testing | ⏸️ Pending | 0% | - |
+| Phase 7: Documentation & Deployment | ⏸️ Pending | 0% | - |
 
 See [`docs/03-IMPLEMENTATION/STATUS.md`](docs/03-IMPLEMENTATION/STATUS.md) for detailed feature breakdown.
 
 ---
 
-## 🎯 Critical Requirements
+## 🎯 Key Features
 
-### Must Preserve Exactly
+### Completed ✅
 
-This project requires **exact preservation** of critical business logic from the original application:
+1. **File Parsing** (7 formats)
+   - PDF, DOCX, PPTX, XLSX, CSV, Images, Text
+   - Automated extraction and context building
 
-1. **Spoken Punctuation Conversion** (`index.js:155-184`)
-   - All regex patterns must match exactly
-   - "full stop" → ".", "comma" → ",", "new line" → "\n", etc.
+2. **AI Generation Pipeline**
+   - OpenAI GPT-4 Turbo with prompt engineering
+   - 19 mandatory rules for consistent output
+   - Model fallback and error handling
 
-2. **Contradiction Cleaning** (`index.js:701-765`)
-   - Template integration must not introduce contradictions
-   - Organ system keyword mapping must be preserved
+3. **MCP Playwright Validation**
+   - Automated browser testing
+   - Structural, visual, and functional checks
+   - Feedback loop (max 5 iterations)
 
-3. **Report Generation Prompt** (`report_prompt.txt`)
-   - 119 lines must be preserved exactly
-   - No modifications to wording or structure
+4. **Frontend Components**
+   - ChatInterface, FileUpload, DiagramPreview, ExportPanel
+   - Responsive design, mobile-friendly
 
-4. **Two-Tier Generation Modes**
-   - Espresso: GPT-5, < 10 seconds
-   - Slow-Brewed: O3, < 30 seconds, includes literature
+### Next (Phase 4) 🎯
+
+1. **Custom React Hooks**
+   - useConversation (message history)
+   - useDiagramGeneration (API wrapper)
+
+2. **State Management**
+   - sessionStorage for persistence
+   - In-memory cache (15-min TTL)
 
 See [`docs/00-PROJECT/CONSTRAINTS.md`](docs/00-PROJECT/CONSTRAINTS.md) for complete constraints.
 
@@ -311,34 +318,26 @@ See [`docs/00-PROJECT/CONSTRAINTS.md`](docs/00-PROJECT/CONSTRAINTS.md) for compl
 ### Coverage Requirements
 
 - **Overall**: 80%+ coverage (mandatory)
-- **Critical Logic**: 100% coverage (mandatory)
-  - `lib/transcription/spoken-punctuation.ts`
-  - `lib/ai/contradiction-cleaner.ts`
-  - `lib/ai/report-generator.ts`
+- **Critical Paths**: 100% coverage required
+  - `lib/parsers/*` (all 7 file formats)
+  - `lib/ai/diagram-generator.ts`
+  - `lib/validation/mcp-playwright.ts`
+  - `lib/export/*` (all 5 formats)
 
 ---
 
 ## 📚 Documentation Index
 
 ### Project Foundation
-- [`docs/00-PROJECT/REQUIREMENTS.md`](docs/00-PROJECT/REQUIREMENTS.md) - Product requirements and user stories
-- [`docs/00-PROJECT/CONSTRAINTS.md`](docs/00-PROJECT/CONSTRAINTS.md) - Technical and business constraints
+- [`docs/00-PROJECT/REQUIREMENTS.md`](docs/00-PROJECT/REQUIREMENTS.md) - Product requirements (900+ lines)
+- [`docs/00-PROJECT/CONSTRAINTS.md`](docs/00-PROJECT/CONSTRAINTS.md) - Technical/business constraints
 
-### Architecture & Design
-- [`docs/01-ARCHITECTURE/BLUEPRINT.md`](docs/01-ARCHITECTURE/BLUEPRINT.md) - High-level system architecture
-- [`docs/01-ARCHITECTURE/DECISIONS.md`](docs/01-ARCHITECTURE/DECISIONS.md) - Architectural Decision Records (ADR)
-- [`docs/01-ARCHITECTURE/DIAGRAMS.md`](docs/01-ARCHITECTURE/DIAGRAMS.md) - System and sequence diagrams
-- [`docs/02-DESIGN/TECHNICAL.md`](docs/02-DESIGN/TECHNICAL.md) - Implementation patterns and code structure
+### Design
+- [`docs/02-DESIGN/DIAGRAM-GENERATOR-DESIGN.md`](docs/02-DESIGN/DIAGRAM-GENERATOR-DESIGN.md) - Technical design (3700+ lines)
 
 ### Implementation
-- [`docs/03-IMPLEMENTATION/STATUS.md`](docs/03-IMPLEMENTATION/STATUS.md) - Current progress and feature status
-- [`docs/03-IMPLEMENTATION/PLAN.md`](docs/03-IMPLEMENTATION/PLAN.md) - Implementation plan and timeline
-
-### Operations
-- [`docs/04-OPERATIONS/SETUP.md`](docs/04-OPERATIONS/SETUP.md) - Setup and credentials guide
-
-### Integrations
-- [`docs/05-INTEGRATIONS/STRIPE.md`](docs/05-INTEGRATIONS/STRIPE.md) - Stripe billing integration guide
+- [`docs/03-IMPLEMENTATION/STATUS.md`](docs/03-IMPLEMENTATION/STATUS.md) - Current progress tracking
+- [`docs/03-IMPLEMENTATION/DIAGRAM-GENERATOR-STATUS.md`](docs/03-IMPLEMENTATION/DIAGRAM-GENERATOR-STATUS.md) - Detailed status
 
 ### Agent Configuration
 - [`.agents/AGENTS.md`](.agents/AGENTS.md) - Agent registry and communication patterns
@@ -370,24 +369,16 @@ Use slash commands to activate specialized agents:
 
 ---
 
-## 🔗 Links
-
-- **Original App**: `RADIOLOGY-REPORTING-APP-Dr-Vikash-Rustagi-main/`
-- **Sample Data**: `sample-data/`
-- **Backup**: `/Users/anand/radiology-ai-app-backup-20251016-124432.tar.gz`
-
----
-
 ## 📞 Support
 
 For questions or issues:
 1. Check [`docs/`](docs/) directory first
 2. Review [`.agents/AGENTS.md`](.agents/AGENTS.md) for workflow guidance
 3. Check [`docs/03-IMPLEMENTATION/STATUS.md`](docs/03-IMPLEMENTATION/STATUS.md) for current progress
-4. Contact project maintainer
+4. See live app: [http://localhost:3001](http://localhost:3001) (when running)
 
 ---
 
-**Last Updated**: October 2025
-**Status**: Pre-Development (Phase 0) - Repository Restructured
-**Next Milestone**: Phase 1 - Foundation (18 hours estimated)
+**Last Updated**: January 2025
+**Status**: Phase 3 Complete (40% overall) - Frontend Development ✅
+**Next Milestone**: Phase 4 - State Management (Week 2-3)

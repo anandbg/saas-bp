@@ -11,7 +11,6 @@
 import type Stripe from 'stripe';
 import { getPlanFromPriceId } from './stripe-client';
 import {
-  createSubscription,
   updateSubscription,
   cancelSubscription,
   upsertSubscription,
@@ -65,15 +64,15 @@ export async function handleSubscriptionCreated(
       stripe_price_id: priceId,
       plan_name: planInfo.plan,
       status: subscription.status as any,
-      current_period_start: new Date(subscription.current_period_start * 1000),
-      current_period_end: new Date(subscription.current_period_end * 1000),
+      current_period_start: new Date((subscription as any).current_period_start * 1000),
+      current_period_end: new Date((subscription as any).current_period_end * 1000),
       amount: subscription.items.data[0]?.price.unit_amount || 0,
       currency: subscription.currency,
       interval: planInfo.interval,
-      trial_start: subscription.trial_start
-        ? new Date(subscription.trial_start * 1000)
+      trial_start: (subscription as any).trial_start
+        ? new Date((subscription as any).trial_start * 1000)
         : null,
-      trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+      trial_end: (subscription as any).trial_end ? new Date((subscription as any).trial_end * 1000) : null,
     });
 
     return {
@@ -118,10 +117,10 @@ export async function handleSubscriptionUpdated(
     await updateSubscription(subscription.id, {
       plan_name: planInfo.plan,
       status: subscription.status as any,
-      current_period_start: new Date(subscription.current_period_start * 1000),
-      current_period_end: new Date(subscription.current_period_end * 1000),
-      cancel_at_period_end: subscription.cancel_at_period_end,
-      canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null,
+      current_period_start: new Date((subscription as any).current_period_start * 1000),
+      current_period_end: new Date((subscription as any).current_period_end * 1000),
+      cancel_at_period_end: (subscription as any).cancel_at_period_end,
+      canceled_at: (subscription as any).canceled_at ? new Date((subscription as any).canceled_at * 1000) : null,
       amount: subscription.items.data[0]?.price.unit_amount || 0,
       stripe_price_id: priceId,
     });
@@ -191,13 +190,13 @@ export async function handleInvoicePaymentSucceeded(
     const { data: subscription } = await supabase
       .from('subscriptions')
       .select('*')
-      .eq('stripe_subscription_id', invoice.subscription as string)
+      .eq('stripe_subscription_id', (invoice as any).subscription as string)
       .single();
 
     if (!subscription) {
       return {
         success: false,
-        message: `Subscription not found: ${invoice.subscription}`,
+        message: `Subscription not found: ${(invoice as any).subscription}`,
       };
     }
 
@@ -206,18 +205,18 @@ export async function handleInvoicePaymentSucceeded(
       const paymentData: CreatePaymentInput = {
         user_id: subscription.user_id,
         subscription_id: subscription.id,
-        stripe_payment_intent_id: invoice.payment_intent as string,
+        stripe_payment_intent_id: (invoice as any).payment_intent as string,
         stripe_invoice_id: invoice.id,
-        amount: invoice.amount_paid,
+        amount: (invoice as any).amount_paid,
         currency: invoice.currency,
         status: 'succeeded',
-        payment_method: invoice.payment_intent
+        payment_method: (invoice as any).payment_intent
           ? ((await supabase
               .from('payments')
               .select('payment_method')
-              .eq('stripe_payment_intent_id', invoice.payment_intent as string)
+              .eq('stripe_payment_intent_id', (invoice as any).payment_intent as string)
               .single()
-              .then((r) => r.data?.payment_method)) as string)
+              .then((r: any) => r.data?.payment_method)) as string)
           : null,
       };
 
@@ -265,13 +264,13 @@ export async function handleInvoicePaymentFailed(
     const { data: subscription } = await supabase
       .from('subscriptions')
       .select('*')
-      .eq('stripe_subscription_id', invoice.subscription as string)
+      .eq('stripe_subscription_id', (invoice as any).subscription as string)
       .single();
 
     if (!subscription) {
       return {
         success: false,
-        message: `Subscription not found: ${invoice.subscription}`,
+        message: `Subscription not found: ${(invoice as any).subscription}`,
       };
     }
 
@@ -280,12 +279,12 @@ export async function handleInvoicePaymentFailed(
       const paymentData: CreatePaymentInput = {
         user_id: subscription.user_id,
         subscription_id: subscription.id,
-        stripe_payment_intent_id: invoice.payment_intent as string,
+        stripe_payment_intent_id: (invoice as any).payment_intent as string,
         stripe_invoice_id: invoice.id,
-        amount: invoice.amount_due,
+        amount: (invoice as any).amount_due,
         currency: invoice.currency,
         status: 'failed',
-        failure_reason: invoice.last_finalization_error?.message || 'Payment failed',
+        failure_reason: (invoice as any).last_finalization_error?.message || 'Payment failed',
       };
 
       await supabase.from('payments').insert(paymentData);

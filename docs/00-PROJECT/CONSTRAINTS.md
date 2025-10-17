@@ -1,451 +1,471 @@
-# Project Constraints
+# AI Diagram Generator - Project Constraints
 
-## 📋 Overview
-
-This document defines all technical, business, and regulatory constraints that must be adhered to during development.
+**Project**: AI-Powered Diagram & Illustration Generator
+**Version**: 1.0.0
+**Date**: January 2025
+**Status**: Active
 
 ---
 
-## 🔧 Technical Constraints
+## Table of Contents
 
-### Technology Stack (MUST USE)
+1. [Technical Constraints](#technical-constraints)
+2. [Architecture Constraints](#architecture-constraints)
+3. [Business Constraints](#business-constraints)
+4. [Security Constraints](#security-constraints)
+5. [Performance Constraints](#performance-constraints)
+6. [Quality Constraints](#quality-constraints)
+7. [Deployment Constraints](#deployment-constraints)
 
-**Frontend**:
-- Next.js 14+ with App Router (mandatory)
-- React 18+ (mandatory)
-- TypeScript 5+ with strict mode (mandatory)
-- Tailwind CSS 3+ for styling (mandatory)
+---
 
-**Backend**:
-- Next.js API Routes (mandatory)
-- Vercel AI SDK 5 for AI operations (mandatory)
-- Node.js 18+ runtime (mandatory)
+## 1. Technical Constraints
 
-**Database & Auth**:
-- Supabase for PostgreSQL database (mandatory)
-- Supabase Auth for authentication (mandatory - NOT Outseta)
-- Row Level Security (RLS) must be enabled on all user-facing tables (mandatory)
+### 1.1 Technology Stack (MANDATORY)
 
-**Billing**:
-- Stripe for subscriptions and payments (mandatory - NOT Outseta)
-- Stripe Customer Portal for self-service billing (mandatory)
-- Usage tracking before allowing operations (mandatory)
+#### Core Technologies
+- **Framework**: Next.js 14+ with App Router (mandatory)
+- **Language**: TypeScript 5+ with strict mode (mandatory)
+- **Styling**: Tailwind CSS 3.4+ (mandatory)
+- **Runtime**: Node.js 18+ (mandatory)
 
-**AI Services**:
-- OpenAI GPT-5 for espresso mode (mandatory)
-- OpenAI O3 for slow-brewed mode (mandatory)
-- OpenAI GPT-4o as fallback model (mandatory)
-- OpenAI Whisper for transcription (mandatory)
-- Model fallback must be implemented (mandatory)
+#### AI & Machine Learning
+- **AI Provider**: OpenAI exclusively (mandatory)
+  - GPT-4 Turbo or GPT-4o for diagram generation (mandatory)
+  - GPT-4V for image analysis (mandatory)
+- **AI SDK**: Vercel AI SDK v3.0+ (mandatory)
+- **Validation**: MCP Playwright for automated testing (mandatory)
 
-**Deployment**:
-- Vercel for hosting (mandatory)
-- Vercel Edge Network (recommended)
+#### File Parsing Libraries
+- **PDF**: `pdf-parse@^1.1.1` (mandatory)
+- **DOCX**: `mammoth@^1.7.0` (mandatory)
+- **XLSX/CSV**: `xlsx@^0.18.5`, `csv-parse@^5.5.6` (mandatory)
+- **PPTX**: `pptxgenjs@^3.12.0` (mandatory)
+- **Images**: GPT-4V via OpenAI API (mandatory)
 
-### Code Quality Standards (MANDATORY)
+#### Export Libraries
+- **PPTX**: `pptxgenjs@^3.12.0` (mandatory)
+- **PDF**: `playwright-core@^1.45.0` or `puppeteer-core` (mandatory)
+- **PNG**: `html2canvas@^1.4.1` or Playwright screenshots (mandatory)
+- **Utilities**: `jszip@^3.10.1`, `react-dropzone@^14.2.3` (mandatory)
+
+#### CDN Dependencies (User-facing)
+- Tailwind CSS: `https://cdn.tailwindcss.com` (mandatory in generated HTML)
+- Lucide Icons: `https://unpkg.com/lucide@latest` (mandatory in generated HTML)
+- Chart.js: `https://cdn.jsdelivr.net/npm/chart.js` (required for charts only)
+
+### 1.2 Muted Features (Feature Flags)
+
+**CRITICAL**: The following features from the original boilerplate MUST be disabled but preserved:
+
+- **Database (Supabase)**: `DATABASE=false`
+  - All database queries bypassed
+  - Mock client provided for compatibility
+  - Schema files preserved for future use
+
+- **Authentication (Supabase Auth)**: `AUTH=false`
+  - All auth middleware disabled
+  - Public routes only
+  - Auth UI components hidden
+
+- **Billing (Stripe)**: `STRIPE=false`
+  - Stripe webhooks disabled
+  - No subscription checks
+  - Integration code preserved
+
+**Implementation**:
+```typescript
+// lib/config/features.ts
+export const FEATURES = {
+  DATABASE: false,
+  AUTH: false,
+  STRIPE: false,
+  DIAGRAM_GENERATOR: true,
+  FILE_PARSING: true,
+  MCP_VALIDATION: true,
+  AI_GENERATION: true,
+} as const;
+```
+
+### 1.3 Code Quality Standards (MANDATORY)
 
 **TypeScript**:
 - 100% TypeScript coverage (mandatory)
 - Strict mode enabled (mandatory)
-- No `any` types except where absolutely unavoidable (mandatory)
-- All exported functions must have types (mandatory)
+- No `any` types except where absolutely necessary (mandatory)
+- All exported functions must have explicit types (mandatory)
 
-**Testing**:
-- 80%+ overall test coverage (mandatory)
-- 100% coverage on critical business logic (mandatory)
-- Unit tests: 60% of test suite (mandatory)
-- Integration tests: 30% of test suite (mandatory)
-- E2E tests: 10% of test suite (mandatory)
-
-**Linting**:
-- ESLint configured (mandatory)
+**Linting & Formatting**:
+- ESLint strict mode (mandatory)
 - Prettier configured (mandatory)
-- Zero linting errors (mandatory)
-- Pre-commit hooks configured (recommended)
+- Zero linting errors in production (mandatory)
+- Pre-commit hooks via Husky (recommended)
 
 ---
 
-## 🚨 Critical Business Logic to Preserve
+## 2. Architecture Constraints
 
-### MUST PRESERVE EXACTLY - No Deviations Allowed
+### 2.1 Stateless Design (MANDATORY)
 
-#### 1. Spoken Punctuation Conversion
+**NO Persistent Storage**:
+- ❌ No database
+- ❌ No user accounts
+- ❌ No server-side sessions
+- ❌ No persistent file storage
 
-**Source**: `RADIOLOGY-REPORTING-APP-Dr-Vikash-Rustagi-main/index.js:155-184`
+**Stateless Requirements**:
+- Conversation history stored in browser `sessionStorage`
+- Generated diagrams stored in browser (sessionStorage or IndexedDB)
+- Each API request is independent and self-contained
+- Closing browser = losing all data (acceptable)
+- No server-side state dependencies
 
-**Requirements**:
-- ALL regex patterns must be preserved exactly
-- Normalization logic must match exactly
-- Conversion mappings must be identical:
-  - "full stop" → "."
-  - "comma" → ","
-  - "new line" → "\n"
-  - "colon" → ":"
-  - "semicolon" → ";"
-  - "question mark" → "?"
-  - "exclamation mark" → "!"
-  - "open parenthesis" / "close parenthesis" → "(", ")"
-  - "hyphen" / "dash" → "-"
+### 2.2 Data Flow Constraints
 
-**Verification**:
-- Must pass all original test cases
-- Output must match original implementation character-for-character
-
-**Location**: `lib/transcription/spoken-punctuation.ts`
-
-#### 2. Contradiction Cleaning Algorithm
-
-**Source**: `RADIOLOGY-REPORTING-APP-Dr-Vikash-Rustagi-main/index.js:701-765`
-
-**Requirements**:
-- Organ system keyword mapping must be preserved exactly
-- Negative finding detection logic must match exactly
-- Adaptation rules must be identical:
-  - "at other levels" insertion logic
-  - "otherwise" insertion logic
-  - "except for" handling
-- No contradiction statements can appear in final output
-
-**Verification**:
-- Test with template: "The lungs are clear. No pleural effusion."
-- With findings: "Nodule in right upper lobe."
-- Must remove "The lungs are clear" completely
-- Must preserve "No pleural effusion"
-- Must NOT introduce new contradictions
-
-**Location**: `lib/ai/contradiction-cleaner.ts`
-
-#### 3. Report Generation Prompt
-
-**Source**: `RADIOLOGY-REPORTING-APP-Dr-Vikash-Rustagi-main/report_prompt.txt` (119 lines)
-
-**Requirements**:
-- Prompt text must be preserved EXACTLY (all 119 lines)
-- No modifications to wording, structure, or examples
-- No additions or deletions
-- Placeholder replacement logic must match original
-
-**Verification**:
-- Hash/checksum of prompt text must match original
-- Output JSON structure must match specifications exactly
-
-**Location**: `lib/ai/prompts/report_prompt.txt`
-
-#### 4. Two-Tier Generation Modes
-
-**Source**: `RADIOLOGY-REPORTING-APP-Dr-Vikash-Rustagi-main/index.js:418-897`
-
-**Requirements**:
-- **Espresso Mode**:
-  - Uses GPT-5 model
-  - Temperature: 0.3
-  - Max tokens: 4000
-  - Target time: < 10 seconds
-  - Fallback to GPT-4o on failure
-
-- **Slow-Brewed Mode**:
-  - Uses O3 model
-  - Temperature: 0.1
-  - Max tokens: 8000
-  - Target time: < 30 seconds
-  - Includes literature references
-  - Fallback to GPT-4o on failure
-
-**Location**: `lib/ai/report-generator.ts`
-
-#### 5. Template Integration
-
-**Source**: `RADIOLOGY-REPORTING-APP-Dr-Vikash-Rustagi-main/index.js:418-897`
-
-**Requirements**:
-- Apply spoken punctuation FIRST (before template)
-- Load template content
-- Integrate findings with template
-- Run contradiction cleaning
-- Build prompt with integrated content
-- Generate report
-- Validate JSON structure
-
-**Order of Operations** (MUST NOT CHANGE):
+**Request/Response Pattern**:
 ```
-1. Apply spoken punctuation to findings
-2. Load template (if specified)
-3. Integrate findings with template
-4. Clean contradictions
-5. Build prompt from report_prompt.txt
-6. Call OpenAI API with mode-specific settings
-7. Implement model fallback if needed
-8. Parse and validate JSON response
-9. Save report metadata
-10. Return structured report
+User Browser (sessionStorage)
+    ↓
+Next.js API Routes (stateless)
+    ↓
+OpenAI API (external)
+    ↓
+MCP Playwright Validation (headless)
+    ↓
+Response to Browser
 ```
 
-**Location**: `lib/ai/report-generator.ts`
+**Caching Strategy**:
+- In-memory cache only (15-minute TTL)
+- No persistent cache
+- Cache invalidation on server restart (acceptable)
+
+### 2.3 Deployment Architecture
+
+- **Platform**: Vercel (mandatory)
+- **Serverless Functions**: All API routes as serverless functions
+- **Edge Functions**: Not required for this project
+- **CDN**: Automatic static asset caching via Vercel
+- **Regions**: Multi-region for low latency
 
 ---
 
-## 💰 Business Constraints
+## 3. Business Constraints
 
-### Budget Constraints
+### 3.1 Budget Constraints
 
-**Monthly Infrastructure Budget**: $70-125/month
+**Monthly Cost Target**: $20-50/month
 
 **Breakdown**:
-- Vercel Pro: $20/month (mandatory)
-- Supabase Pro: $25/month (mandatory)
+- Vercel Hobby Plan: $0/month (sufficient for MVP)
 - OpenAI API: $20-50/month (variable based on usage)
-- Stripe: 2.9% + $0.30 per transaction (no monthly fee)
-- Optional services: $5-30/month (Deepgram, Google APIs)
+- Total: $20-50/month
 
-**Cost Optimization Requirements**:
-- Use Supabase Auth instead of Outseta (saves $50-150/month)
-- Use Stripe direct instead of third-party (no platform fees)
-- Implement caching to reduce API calls
-- Monitor and optimize OpenAI token usage
+**Cost Optimization**:
+- No database costs (stateless)
+- No authentication service costs (no auth)
+- No billing service costs (no subscriptions)
+- Minimal infrastructure costs
 
-### Timeline Constraints
+### 3.2 Timeline Constraints
 
-**Total Timeline**: 4-6 weeks (88 hours estimated)
+**Total Timeline**: 6 weeks
 
 **Phase Breakdown**:
-- Phase 1 (Foundation): 18 hours (Week 1-2)
-- Phase 2 (Core Features): 30 hours (Week 3-4)
-- Phase 3 (Advanced Features): 18 hours (Week 5)
-- Phase 4 (Testing & Launch): 22 hours (Week 6)
+- Phase 1 (Requirements & Design): Week 1 ✅ Complete
+- Phase 2 (Foundation & Core): Week 1 ✅ Complete
+- Phase 3 (Frontend Development): Week 2 ✅ Complete
+- Phase 4 (State Management): Week 2-3
+- Phase 5 (Export Functionality): Week 4
+- Phase 6 (Testing): Week 5
+- Phase 7 (Documentation & Deployment): Week 6
 
-**Constraints**:
-- Cannot extend timeline beyond 6 weeks without user approval
-- Must obtain user approval before starting each phase
-- Must update STATUS.md after completing each feature
+### 3.3 Scope Constraints
 
-### Pricing Tiers (Stripe)
+**In Scope**:
+- Diagram generation via AI
+- File upload and parsing (7 formats)
+- MCP Playwright validation
+- Export in 5 formats
+- Session-based history
 
-**Must Implement These Plans**:
-1. **Free**: 5 reports/month, 3 templates, 1GB storage
-2. **Professional** ($29/month): 100 reports/month, 50 templates, 10GB storage
-3. **Practice** ($99/month): 500 reports/month, 200 templates, 50GB storage, 10 team members
-4. **Enterprise** ($200/month): Unlimited reports, unlimited templates, 500GB storage, 100 team members
-
-**Billing Rules**:
-- Usage limits must be enforced BEFORE allowing operations
-- Exceeded limits must show upgrade prompt
-- Stripe webhooks must handle all subscription events
-- Customer Portal must be accessible from app
+**Out of Scope**:
+- User authentication
+- Data persistence
+- Collaboration features
+- Payment/billing
+- Mobile native apps
+- API for external integrations
 
 ---
 
-## 🔐 Security Constraints
+## 4. Security Constraints
 
-### Authentication (MANDATORY)
+### 4.1 Input Validation (MANDATORY)
 
-**Supabase Auth Requirements**:
-- Email/password authentication (mandatory)
-- OAuth providers: Google, GitHub (mandatory)
-- JWT tokens for session management (mandatory)
-- Secure HTTP-only cookies (mandatory)
-- CSRF protection (mandatory)
-- Token refresh mechanism (mandatory)
+**File Upload**:
+- File type validation (whitelist only)
+- File size limits: 20MB per file, 50MB total
+- Malware scanning (recommended for production)
+- Sanitize file names
 
-**Authorization**:
-- Row Level Security (RLS) on ALL user-facing tables (mandatory)
-- Middleware protection on ALL protected routes (mandatory)
-- API routes must verify authentication (mandatory)
-- User context must be added to request headers (mandatory)
-
-### Data Protection (MANDATORY)
-
-**In Transit**:
-- HTTPS only (enforced by Vercel) (mandatory)
-- No unencrypted data transmission (mandatory)
-
-**At Rest**:
-- Database encryption (Supabase default) (mandatory)
-- Secure file storage (Supabase Storage) (mandatory)
-
-**Input Validation**:
+**User Input**:
 - Zod schemas for all API inputs (mandatory)
-- SQL injection prevention via parameterized queries (mandatory)
-- XSS prevention via output sanitization (mandatory)
+- XSS prevention via sanitization (mandatory)
+- Maximum request size: 50MB (mandatory)
 
-**Secrets Management**:
-- Environment variables only (mandatory)
-- Never commit secrets to git (mandatory)
-- Separate dev/prod credentials (mandatory)
+**Generated HTML**:
+- Sandbox iframes for preview (mandatory)
+- No `allow-same-origin` in iframe (mandatory)
+- Content Security Policy headers (mandatory)
+
+### 4.2 API Security (MANDATORY)
+
+**OpenAI API Key**:
+- Stored in environment variables only (mandatory)
+- Never exposed to client (mandatory)
+- Separate keys for dev/prod (mandatory)
 - Regular key rotation (recommended)
 
-**API Security**:
-- Rate limiting per user (recommended)
-- Request size limits (mandatory)
-- CORS configuration (mandatory)
+**Rate Limiting**:
+- 20 requests per minute per IP (mandatory)
+- 100 requests per hour per IP (mandatory)
+- Exponential backoff for OpenAI retries (mandatory)
+
+**HTTPS**:
+- HTTPS only (enforced by Vercel) (mandatory)
+- No HTTP fallback (mandatory)
 
 ---
 
-## 📱 Platform Constraints
+## 5. Performance Constraints
 
-### Browser Support (MANDATORY)
+### 5.1 Response Time Requirements (MANDATORY)
 
-**Supported Browsers**:
-- Chrome (latest 2 versions)
-- Firefox (latest 2 versions)
-- Safari (latest 2 versions)
-- Edge (latest 2 versions)
+**API Endpoints**:
+- Diagram generation: < 30 seconds (95th percentile)
+- File parsing: < 10 seconds for 20MB files (95th percentile)
+- Validation: < 20 seconds per iteration (95th percentile)
+- Export generation: < 10 seconds (95th percentile)
+
+**Frontend**:
+- Initial page load: < 3 seconds
+- Time to interactive: < 5 seconds
+- Diagram preview render: < 1 second
+
+### 5.2 Resource Limits
+
+**Memory**:
+- Server memory per request: < 512MB
+- Browser memory usage: < 500MB
+- File processing memory: < 1GB
+
+**Concurrency**:
+- Maximum concurrent generations: 10 per instance
+- Maximum concurrent validations: 5 per instance
+- Maximum file uploads in parallel: 5
+
+**Output Limits**:
+- Maximum HTML output: 2MB
+- Maximum export file size:
+  - PPTX: 25MB
+  - PDF: 10MB
+  - PNG: 5MB
+  - HTML: 2MB
+
+---
+
+## 6. Quality Constraints
+
+### 6.1 Diagram Quality (MANDATORY)
+
+**Prompt Engineering Rules**:
+All generated diagrams MUST follow these rules (see REQUIREMENTS.md FR-3.2 for full list):
+
+1. Single HTML code block with inline CSS only
+2. Include `<html>`, `<head>`, `<body>` tags
+3. Use Lucide icons (stroke-width: 1.5)
+4. Tailwind CDN + Lucide CDN required
+5. Responsive design (mobile/tablet/desktop)
+6. Professional design (Linear/Stripe/Vercel style)
+7. No JavaScript animations (Tailwind only)
+8. Dark mode for tech, light for business
+9. Charts use Chart.js with bug fixes
+
+**Validation Pass Rate**:
+- Target: 95%+ first-attempt pass rate
+- Maximum iterations: 5
+- Stop validation after 5 failed attempts
+
+### 6.2 Test Coverage (MANDATORY)
+
+**Overall Coverage**: 80%+ (mandatory)
+
+**Breakdown**:
+- Unit tests: 60% of test suite
+- Integration tests: 30% of test suite
+- E2E tests: 10% of test suite
+
+**Critical Paths** (100% coverage required):
+- File parsing (all 7 formats)
+- AI generation pipeline
+- MCP validation system
+- Export functionality (all 5 formats)
+
+---
+
+## 7. Deployment Constraints
+
+### 7.1 Environment Configuration
+
+**Three Environments**:
+1. Development (local): `npm run dev`
+2. Preview (Vercel): Automatic per PR
+3. Production (Vercel): Automatic on main branch
+
+**Environment Variables**:
+```bash
+# Required
+OPENAI_API_KEY=xxx
+
+# Feature Flags
+DATABASE=false
+AUTH=false
+STRIPE=false
+
+# Optional
+MCP_VALIDATION_ENABLED=true
+```
+
+### 7.2 CI/CD Requirements (MANDATORY)
+
+**GitHub Actions**:
+- Run on all PRs
+- Type checking must pass
+- Linting must pass
+- Tests must pass (when implemented)
+- Build must succeed
+
+**Vercel Deployment**:
+- Automatic preview per PR
+- Automatic production on main merge
+- Environment variables configured
+- Build cache enabled
+
+### 7.3 Monitoring Requirements
+
+**Production Monitoring** (recommended):
+- Error tracking (Sentry or similar)
+- Performance monitoring (Vercel Analytics)
+- OpenAI API usage tracking
+- Cost monitoring
+
+---
+
+## 8. Browser & Platform Constraints
+
+### 8.1 Browser Support (MANDATORY)
+
+**Supported**:
+- Chrome/Edge: Latest 2 versions
+- Firefox: Latest 2 versions
+- Safari: Latest 2 versions
+- Mobile browsers: iOS Safari 14+, Chrome Android 90+
 
 **Not Supported**:
 - Internet Explorer (all versions)
-- Mobile browsers in Phase 1 (future support planned)
+- Browsers older than 2 major versions
 
-### Device Support
+### 8.2 Device Support
 
-**Phase 1** (Current):
-- Desktop/Laptop only
-- Minimum resolution: 1280x720
-- Responsive design for desktop sizes
+**Supported**:
+- Desktop: 1024px and above
+- Tablet: 768px - 1023px
+- Mobile: 375px - 767px
 
-**Future Phases**:
-- Tablet support (iPad, Android tablets)
-- Mobile support (iOS, Android)
+**Requirements**:
+- Responsive design across all screen sizes
+- Touch-friendly UI elements (44px minimum tap target)
+- Mobile-optimized file upload
 
-### Accessibility Requirements (MANDATORY)
+### 8.3 Accessibility (MANDATORY)
 
 **WCAG 2.1 AA Compliance**:
 - Keyboard navigation (mandatory)
 - Screen reader support (mandatory)
-- Color contrast ratios (mandatory)
+- Color contrast ratios >= 4.5:1 (mandatory)
 - Alt text on images (mandatory)
 - ARIA labels on interactive elements (mandatory)
-- Focus indicators (mandatory)
+- Focus indicators visible (mandatory)
 
 ---
 
-## 🌐 API Constraints
+## 9. Forbidden Practices
 
-### Rate Limits
+### 9.1 Code
 
-**OpenAI API**:
-- Respect OpenAI rate limits (mandatory)
-- Implement retry logic with exponential backoff (mandatory)
-- Monitor token usage (mandatory)
+- ❌ NO `any` types (except unavoidable)
+- ❌ NO hardcoded credentials or API keys
+- ❌ NO `console.log` in production
+- ❌ NO client-side storage of API keys
+- ❌ NO bypassing input validation
+- ❌ NO SQL (we have no database)
 
-**Stripe API**:
-- Respect Stripe rate limits (mandatory)
-- Implement webhook idempotency (mandatory)
+### 9.2 Architecture
 
-### Response Time Requirements
+- ❌ NO database connections (stateless)
+- ❌ NO user authentication (disabled)
+- ❌ NO server-side sessions
+- ❌ NO persistent state
+- ❌ NO circumventing feature flags
 
-**API Endpoints**:
-- < 2 seconds for 95th percentile (mandatory)
-- < 5 seconds maximum (mandatory)
+### 9.3 Security
 
-**Report Generation**:
-- Espresso mode: < 10 seconds (mandatory)
-- Slow-brewed mode: < 30 seconds (mandatory)
-
-### Error Handling (MANDATORY)
-
-**All API Routes Must**:
-- Return proper HTTP status codes
-- Return structured error responses
-- Log errors server-side
-- Never expose sensitive information in errors
-- Handle all error scenarios gracefully
-
----
-
-## 📦 Deployment Constraints
-
-### Environment Requirements
-
-**Three Environments Required**:
-1. Development (local)
-2. Preview (Vercel preview deployments per PR)
-3. Production (Vercel production)
-
-**Environment Variables**:
-- Must be configured in Vercel
-- Must never be committed to git
-- Must have separate values per environment
-
-### CI/CD Requirements
-
-**GitHub Actions** (mandatory):
-- Run on all pull requests
-- Run linting
-- Run type checking
-- Run all tests
-- Block merge if any check fails
-
-**Vercel Deployment** (mandatory):
-- Automatic preview deployments for PRs
-- Automatic production deployment on main branch merge
-- Post-deploy smoke tests
-
-### Database Migrations
-
-**Supabase Migrations** (mandatory):
-- All schema changes via migrations
-- Migrations must be reversible
-- Test migrations locally before production
-- Backup production database before migrations
-
----
-
-## 🚫 Forbidden Practices
-
-### Code
-
-- ❌ NO `any` types (except unavoidable cases)
-- ❌ NO `console.log` in production code
-- ❌ NO hardcoded credentials or secrets
-- ❌ NO SQL string concatenation (SQL injection risk)
-- ❌ NO bypassing RLS policies (use service role key sparingly)
-- ❌ NO skipping input validation
-- ❌ NO client-side storage of sensitive data
-
-### Architecture
-
-- ❌ NO direct database access from client components
+- ❌ NO iframe without sandbox
+- ❌ NO `allow-same-origin` in iframe sandbox
 - ❌ NO exposing API keys to client
-- ❌ NO skipping authentication checks
-- ❌ NO modifying critical business logic behavior
-- ❌ NO removing error handling
-- ❌ NO circumventing handoff validation gates
+- ❌ NO executing user-provided JavaScript
+- ❌ NO SQL injection risks (we have no SQL anyway)
 
-### Process
+### 9.4 Process
 
-- ❌ NO skipping test writing
-- ❌ NO merging without passing tests
-- ❌ NO skipping code review (self-review against specs)
-- ❌ NO progressing without meeting handoff gates
+- ❌ NO skipping validation gates
+- ❌ NO merging without passing CI/CD
 - ❌ NO deploying without testing
+- ❌ NO modifying prompt engineering rules
+- ❌ NO reducing validation strictness
 
 ---
 
-## ✅ Compliance Checklist
+## 10. Compliance Checklist
 
 Before marking any feature complete:
 
-- [ ] All technology stack requirements met
-- [ ] Critical business logic preserved exactly
-- [ ] TypeScript strict mode passes
-- [ ] Test coverage >= 80% (100% on critical logic)
-- [ ] Security requirements met
-- [ ] Performance requirements met
-- [ ] Accessibility requirements met
+- [ ] Technology stack requirements met
+- [ ] Stateless architecture maintained (no database/sessions)
+- [ ] Feature flags properly configured
+- [ ] TypeScript strict mode passes with no errors
+- [ ] Security requirements met (input validation, API key protection)
+- [ ] Performance requirements met (< 30s generation, < 20s validation)
+- [ ] Validation pass rate >= 95%
+- [ ] All prompt engineering rules enforced
+- [ ] Browser support requirements met
+- [ ] Accessibility requirements met (WCAG 2.1 AA)
 - [ ] No forbidden practices used
-- [ ] All handoff validation gates passed
+- [ ] CI/CD passes (type check, lint, build)
 - [ ] Documentation updated
 
 ---
 
-## 📚 Reference
+## 11. References
 
-For implementation guidance, see:
-- [REQUIREMENTS.md](./REQUIREMENTS.md) - What to build
-- [TECHNICAL.md](../02-DESIGN/TECHNICAL.md) - How to build
-- [CLAUDE.md](../../.claude/CLAUDE.md) - Development workflow
+- **Requirements**: `docs/00-PROJECT/REQUIREMENTS.md`
+- **Design**: `docs/02-DESIGN/DIAGRAM-GENERATOR-DESIGN.md`
+- **Status**: `docs/03-IMPLEMENTATION/STATUS.md`
+- **Git Workflow**: `docs/04-PROCESSES/GIT-WORKFLOW.md`
 
 ---
 
-**Last Updated**: October 2025
-**Status**: Living Document - Must be reviewed before starting any implementation
-**Owner**: Requirements Analyst + Project Manager
+**Last Updated**: January 2025
+**Status**: Living Document
+**Owner**: Project Manager + Requirements Analyst

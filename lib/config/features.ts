@@ -26,8 +26,9 @@ export const FEATURES = {
   // New features (active)
   DIAGRAM_GENERATOR: true, // Always enabled
   FILE_PARSING: true,
-  MCP_VALIDATION: process.env.NEXT_PUBLIC_ENABLE_MCP_VALIDATION !== 'false', // Enabled by default
+  MCP_VALIDATION: false, // Disabled - slows down generation
   AI_GENERATION: true,
+  WEB_SEARCH: process.env.PERPLEXITY_API_KEY ? true : false, // Feature 6.0
 } as const;
 
 /**

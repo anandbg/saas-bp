@@ -97,6 +97,17 @@ REMEMBER:
 - Ensure the output is complete and can be rendered immediately`;
 
 /**
+ * Search context from Perplexity API
+ */
+export interface SearchContext {
+  answer: string;
+  citations: Array<{
+    url: string;
+    title: string;
+  }>;
+}
+
+/**
  * Build the complete prompt for diagram generation
  * @param userRequest - The user's description of what they want to create
  * @param context - Optional context from uploaded files or previous conversation
@@ -108,6 +119,7 @@ export function buildDiagramPrompt(
     fileContents?: string[];
     previousDiagrams?: string[];
     conversationHistory?: Array<{ role: string; content: string }>;
+    searchContext?: SearchContext;
   }
 ): Array<{ role: 'system' | 'user' | 'assistant'; content: string }> {
   const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
@@ -124,6 +136,27 @@ export function buildDiagramPrompt(
 
   // Build user message with all context
   let userMessage = userRequest;
+
+  // Add web search context if provided (Feature 6.0)
+  if (context?.searchContext) {
+    const citationsText = context.searchContext.citations
+      .map((c, i) => `[${i + 1}] ${c.title} - ${c.url}`)
+      .join('\n');
+
+    const searchSection = `**Web Research Context:**
+
+${context.searchContext.answer}
+
+**Sources:**
+${citationsText}
+
+**Instructions:** Use the above research to inform your diagram. Include a small citation footer referencing the sources by number [1], [2], etc.
+
+---
+
+`;
+    userMessage = searchSection + userMessage;
+  }
 
   // Add file contents if provided
   if (context?.fileContents && context.fileContents.length > 0) {

@@ -8,19 +8,19 @@
 
 ## 📊 Overall Progress
 
-**Phase**: Phase 5 Complete ✅, Testing Ready 🎯
+**Phase**: Foundation & Frontend Complete ✅, State Management Ready 🎯
 
 | Phase | Status | Progress | Completion Date |
 |-------|--------|----------|-----------------|
 | 1. Requirements & Design | ✅ Complete | 100% | January 2025 |
 | 2. Foundation & Core | ✅ Complete | 100% | January 2025 |
 | 3. Frontend Development | ✅ Complete | 100% | January 2025 |
-| 4. State Management | ✅ Complete | 100% | January 2025 |
-| 5. Export Functionality | ✅ Complete | 100% | January 2025 |
+| 4. State Management | ⏳ Pending | 0% | - |
+| 5. Export Functionality | ⏳ Pending | 0% | - |
 | 6. Testing | ⏳ Pending | 0% | - |
 | 7. Documentation & Deployment | ⏳ Pending | 0% | - |
 
-**Overall Completion**: ~71% (5 of 7 phases complete)
+**Overall Completion**: ~40% (3 of 7 phases complete)
 
 ---
 
@@ -311,186 +311,78 @@
 - **Build Status**: ✅ Compiles successfully
 - **Commit**: Included in Phase 3 commit
 
-### Phase 4: State Management (100% Complete)
-
-#### useConversation Hook
-- **File**: `hooks/useConversation.ts`
-- **Features**:
-  - ✅ sessionStorage persistence with automatic save/load
-  - ✅ Storage versioning (v1.0) for future compatibility
-  - ✅ Graceful error handling for storage quota exceeded
-  - ✅ Automatic cleanup of corrupted data
-  - ✅ Date serialization/deserialization for timestamps
-  - ✅ Type-safe message management with auto-generated IDs
-  - ✅ storageAvailable flag for storage health monitoring
-- **Status**: ✅ Complete
-- **Commit**: `feat(state-management): Implement Phase 4 state management`
-
-#### useDiagramGeneration Hook
-- **File**: `hooks/useDiagramGeneration.ts`
-- **Features**:
-  - ✅ Retry logic: 3 attempts with exponential backoff (1s → 2s → 4s, max 10s)
-  - ✅ 90-second timeout for API calls using AbortController
-  - ✅ Intelligent retry decisions (don't retry on validation errors or timeouts)
-  - ✅ Conversation history and file upload integration
-  - ✅ Detailed error categorization (timeout, network, validation)
-  - ✅ retryAttempt tracking for UI feedback
-  - ✅ makeRequest helper function for clean API calls
-- **Status**: ✅ Complete
-- **Commit**: Included in state-management commit
-
-#### In-Memory Cache
-- **File**: `lib/cache/diagram-cache.ts`
-- **Features**:
-  - ✅ TTL-based expiration (1 hour default)
-  - ✅ LRU eviction (maximum 100 cached items)
-  - ✅ Request hashing for intelligent cache keys
-  - ✅ Automatic cleanup every 5 minutes
-  - ✅ Thread-safe singleton pattern
-  - ✅ Cache statistics tracking (size, oldest, newest entries)
-  - ✅ Configurable TTL per entry
-- **Configuration**:
-  ```typescript
-  DEFAULT_TTL = 60 * 60 * 1000  // 1 hour
-  MAX_CACHE_SIZE = 100           // Max items
-  CLEANUP_INTERVAL = 5 * 60 * 1000  // 5 minutes
-  ```
-- **Status**: ✅ Complete
-- **Commit**: Included in state-management commit
-
-#### Updated Main Page
-- **File**: `app/page.tsx`
-- **Changes**:
-  - ✅ Replaced manual state management with `useConversation` hook
-  - ✅ Replaced API calls with `useDiagramGeneration` hook
-  - ✅ Simplified message handling (auto-ID generation)
-  - ✅ Integrated retry logic automatically
-  - ✅ Maintained all existing functionality
-  - ✅ Reduced code complexity by ~40%
-- **Before vs After**:
-  - Before: ~115 lines with manual state, FormData building, error handling
-  - After: ~85 lines using hooks with automatic retry, persistence, caching
-- **Status**: ✅ Complete
-- **Commit**: Included in state-management commit
-
-### Phase 5: Export Functionality & UI Redesign (100% Complete)
-
-#### UI Redesign (January 2025)
-- **Status**: ✅ Complete
-- **File**: `app/page.tsx` (completely rebuilt)
-- **Design Aesthetic**: Linear/Stripe/Vercel style
-- **Key Changes**:
-  - ✅ Two-panel layout (Chat left, Diagram right)
-  - ✅ Integrated file upload inside chat panel (collapsible)
-  - ✅ Integrated export controls in diagram header
-  - ✅ White background with subtle borders
-  - ✅ Thinner font weights (semibold instead of bold)
-  - ✅ Tracking-tight for large text (-0.02em)
-  - ✅ 1.5 strokeWidth for all Lucide icons
-  - ✅ "AD" brand logo in header
-  - ✅ Empty states for chat and diagram
-  - ✅ Loading states with spinners
-  - ✅ Export status messages (inline in header)
-  - ✅ Status bar with connection indicator, metadata
-  - ✅ Responsive grid (cols-1 mobile, cols-2 desktop)
-- **Preserved Functionality**:
-  - ✅ useConversation hook (message history + persistence)
-  - ✅ useDiagramGeneration hook (retry logic + caching)
-  - ✅ File upload with drag-and-drop
-  - ✅ All export handlers (PPTX, PDF, PNG, HTML)
-  - ✅ Copy to clipboard
-  - ✅ Content-type validation
-  - ✅ Loading/success/error states
-  - ✅ Iframe sandbox security
-- **Commit**: `feat(ui): Complete UI redesign with Linear/Stripe/Vercel aesthetic`
-
-#### HTML to PNG Export
-- **File**: `lib/export/html-to-png.ts`
-- **Features**:
-  - ✅ Server-side rendering using Playwright (headless Chromium)
-  - ✅ Retina quality (2x device scale factor)
-  - ✅ Full-page screenshot with configurable viewport
-  - ✅ Automatic resource loading with networkidle wait
-  - ✅ Browser lifecycle management (proper cleanup)
-  - ✅ Comprehensive error handling
-- **Status**: ✅ Complete
-- **Commit**: `feat(export): Implement complete multi-format export system`
-
-#### HTML to PDF Export
-- **File**: `lib/export/html-to-pdf.ts`
-- **Features**:
-  - ✅ Server-side rendering using Playwright
-  - ✅ Configurable page format (A4, Letter, A3, etc.)
-  - ✅ Customizable margins (default: 0.4in all sides)
-  - ✅ Landscape/portrait orientation support
-  - ✅ Print background graphics enabled
-  - ✅ Automatic resource loading
-- **Status**: ✅ Complete
-- **Commit**: Included in export commit
-
-#### HTML to PPTX Export
-- **File**: `lib/export/html-to-pptx.ts`
-- **Features**:
-  - ✅ PowerPoint generation using pptxgenjs
-  - ✅ 16:9 widescreen layout (LAYOUT_WIDE)
-  - ✅ PNG-based conversion (renders HTML to PNG first)
-  - ✅ Image embedding with proper sizing (contain mode)
-  - ✅ Configurable slide dimensions (default: 1920x1080)
-  - ✅ Multi-slide support (htmlsToPptx function)
-  - ✅ Metadata support (title, author, subject)
-- **Status**: ✅ Complete
-- **Commit**: Included in export commit
-
-#### HTML Exporter
-- **File**: `lib/export/html-exporter.ts`
-- **Features**:
-  - ✅ Self-contained HTML file generation
-  - ✅ CDN dependencies (Tailwind CSS, Lucide icons)
-  - ✅ Conditional Chart.js inclusion (when needed)
-  - ✅ Responsive meta viewport tag
-  - ✅ Icon initialization script
-  - ✅ Configurable title and metadata
-- **Status**: ✅ Complete
-- **Commit**: Included in export commit
-
-#### Export API Endpoint
-- **File**: `app/api/diagram/export/route.ts`
-- **Features**:
-  - ✅ POST endpoint with format routing (pptx, pdf, png, html)
-  - ✅ Request validation (HTML content, format type)
-  - ✅ Format-specific content-type headers
-  - ✅ Download headers with timestamped filenames
-  - ✅ File size limits enforcement (PPTX: 25MB, PDF: 10MB, PNG: 5MB, HTML: 2MB)
-  - ✅ Comprehensive error handling
-  - ✅ Buffer-based response streaming
-- **Status**: ✅ Complete
-- **Commit**: Included in export commit
-
-#### Updated Main Page (Export Integration)
-- **File**: `app/page.tsx`
-- **Changes**:
-  - ✅ Connected all export buttons to `/api/diagram/export`
-  - ✅ Unified export handler pattern
-  - ✅ Blob download logic with URL.createObjectURL
-  - ✅ Automatic URL cleanup (URL.revokeObjectURL)
-  - ✅ Error handling for each export type
-  - ✅ Loading states maintained
-- **Status**: ✅ Complete
-- **Commit**: Included in export commit
-
 ---
 
 ## 🔄 In Progress Work
 
-None currently. Ready to proceed to Phase 6 (Testing).
+None currently. Ready to proceed to Phase 4 (State Management).
 
 ---
 
 ## ⏳ Pending Work
 
+### Phase 4: State Management (0% Complete)
+
+**Status**: Blocked by Phase 3
+**Timeline**: Week 2-3 (per design document)
+
+#### Tasks:
+
+1. **Conversation State Hook**
+   - File: `hooks/useConversation.ts`
+   - Features: sessionStorage integration, message history, clear/reset
+   - Status: ⏳ Not started
+
+2. **Diagram Generation Hook**
+   - File: `hooks/useDiagramGeneration.ts`
+   - Features: API integration, loading states, error handling, retry logic
+   - Status: ⏳ Not started
+
+3. **In-Memory Cache**
+   - File: `lib/cache/diagram-cache.ts`
+   - Features: TTL-based cache (1 hour), LRU eviction (100 items)
+   - Status: ⏳ Not started
+
+### Phase 5: Export Functionality (0% Complete)
+
+**Status**: Blocked by Phase 3
+**Timeline**: Week 4 (per design document)
+
+#### Tasks:
+
+1. **PPTX Export**
+   - File: `lib/export/pptx-exporter.ts`
+   - Library: pptxgenjs
+   - Status: ⏳ Not started
+
+2. **PDF Export**
+   - File: `lib/export/pdf-exporter.ts`
+   - Library: Playwright (headless browser)
+   - Status: ⏳ Not started
+
+3. **PNG Export**
+   - File: `lib/export/png-exporter.ts`
+   - Library: html2canvas
+   - Status: ⏳ Not started
+
+4. **HTML Export**
+   - File: `lib/export/html-exporter.ts`
+   - Features: Self-contained file with inline CSS/scripts
+   - Status: ⏳ Not started
+
+5. **Clipboard Copy**
+   - File: `lib/export/clipboard-utils.ts`
+   - Features: Copy HTML as rich text
+   - Status: ⏳ Not started
+
+6. **Export API Endpoint**
+   - File: `app/api/diagram/export/route.ts`
+   - Method: POST
+   - Status: ⏳ Not started
+
 ### Phase 6: Testing (0% Complete)
 
-**Status**: Ready to start (Phase 5 complete)
+**Status**: Blocked by Phase 3-5
 **Timeline**: Week 5 (per design document)
 
 #### Test Coverage Target: 80%
@@ -513,7 +405,7 @@ None currently. Ready to proceed to Phase 6 (Testing).
 
 ### Phase 7: Documentation & Deployment (0% Complete)
 
-**Status**: Blocked by Phase 6 (testing)
+**Status**: Blocked by Phase 3-6
 **Timeline**: Week 6 (per design document)
 
 #### Tasks:
@@ -575,42 +467,36 @@ e0bbfaf - feat(phase-3): Complete frontend development with build fixes
 
 ## 🎯 Next Steps (Immediate)
 
-### Phase 5 Complete ✅ - Ready for Phase 6
+### Phase 3 Complete ✅ - Ready for Phase 4
 
-### Recommended Action Plan for Phase 6 (Testing):
+### Recommended Action Plan for Phase 4 (State Management):
 
-1. **Unit Tests** (Week 5)
-   - Test all 7 file parsers (PDF, DOCX, PPTX, XLSX, CSV, images, text)
-   - Test AI generation module (prompt building, HTML extraction, validation)
-   - Test MCP validation system (structure checks, mock Playwright)
-   - Test all 5 export utilities (PPTX, PDF, PNG, HTML, clipboard)
-   - Target: 60% of total test coverage
+1. **Create Phase 4 Task Document** (Now)
+   - Break down state management requirements
+   - Define hooks specifications (useConversation, useDiagramGeneration)
+   - Plan sessionStorage integration
+   - Design in-memory cache (TTL + LRU)
 
-2. **Integration Tests** (Week 5)
-   - Test /api/diagram/generate endpoint (file upload, generation, validation)
-   - Test /api/diagram/export endpoint (all formats)
-   - Test complete generation pipeline end-to-end
-   - Target: 30% of total test coverage
+2. **Implement Custom Hooks** (Week 2-3)
+   - Create `hooks/useConversation.ts` for message history
+   - Create `hooks/useDiagramGeneration.ts` for API integration
+   - Implement sessionStorage persistence
+   - Add error recovery and retry logic
 
-3. **E2E Tests** (Week 5)
-   - Test critical user workflows: Upload → Generate → Export
-   - Test error recovery and retry logic
-   - Test browser compatibility (Chrome, Firefox, Safari)
-   - Target: 10% of total test coverage
+3. **Implement Caching Layer** (Week 3)
+   - Create `lib/cache/diagram-cache.ts`
+   - Implement TTL-based expiration (1 hour)
+   - Implement LRU eviction (100 items max)
+   - Add cache invalidation utilities
 
-### Success Criteria for Phase 5 (✅ VALIDATED - January 2025):
-- [x] HTML to PNG export using Playwright (Retina quality, 2x scale)
-- [x] HTML to PDF export using Playwright (customizable margins, orientation)
-- [x] HTML to PPTX export using pptxgenjs (16:9 widescreen, PNG embedding)
-- [x] Self-contained HTML file export (CDN dependencies)
-- [x] Export API endpoint (/api/diagram/export) with format routing
-- [x] File size limits enforcement (PPTX: 25MB, PDF: 10MB, PNG: 5MB, HTML: 2MB)
-- [x] Connected all export buttons to API endpoint
-- [x] Blob download logic with automatic cleanup
-- [x] Error handling for each export type
-- [x] **Build compiles successfully** ✅
-- [x] **All TypeScript errors resolved** ✅
-- [x] **All 5 export formats working** ✅
+### Success Criteria for Phase 3 (Achieved):
+- [x] All 5 components built with TypeScript
+- [x] Components follow design document specifications
+- [x] Tailwind CSS styling with modern aesthetic
+- [x] Components are responsive (mobile/tablet/desktop)
+- [x] Comprehensive error handling in place
+- [x] Security fix applied (iframe sandbox)
+- [x] Build compiles successfully
 - [x] Committed with conventional commit messages
 
 ---

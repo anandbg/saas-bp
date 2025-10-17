@@ -72,6 +72,7 @@ interface UsageItemProps {
     current: number;
     limit: number;
     percentage: number;
+    allowed: boolean;
     warningThreshold: boolean;
   };
 }

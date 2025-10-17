@@ -15,6 +15,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateDiagram, generateWithFeedbackLoop } from '@/lib/ai/diagram-generator';
 import { parseMultipleFiles, validateFile } from '@/lib/parsers';
 import { z } from 'zod';
+import { FEATURES } from '@/lib/config/features';
+import { analyzeSearchNeed } from '@/lib/ai/perplexity-query-builder';
+import { selectModel } from '@/lib/ai/perplexity-model-selector';
+import { searchWithPerplexity } from '@/lib/ai/perplexity-client';
+import { rateLimiter } from '@/lib/ai/perplexity-rate-limiter';
+import { usageTracker, budgetTracker } from '@/lib/ai/perplexity-usage-tracker';
+import type { SearchContext } from '@/lib/ai/diagram-prompt-template';
 
 // =============================================================================
 // REQUEST VALIDATION
@@ -34,6 +41,7 @@ const DiagramGenerationSchema = z.object({
   previousDiagrams: z.array(z.string()).optional(),
   enableValidation: z.boolean().optional().default(true),
   maxIterations: z.number().min(1).max(10).optional().default(5),
+  enableSearch: z.boolean().optional().default(true), // Feature 6.0
 });
 
 // =============================================================================
@@ -81,16 +89,17 @@ export async function POST(request: NextRequest) {
     const userRequest = formData.get('userRequest') as string;
     const enableValidation = formData.get('enableValidation') === 'true';
     const maxIterations = parseInt(formData.get('maxIterations') as string) || 5;
+    const enableSearch = formData.get('enableSearch') !== 'false'; // Default true
     const conversationHistoryStr = formData.get('conversationHistory') as string;
     const previousDiagramsStr = formData.get('previousDiagrams') as string;
 
     // Parse optional JSON fields
-    let conversationHistory;
-    let previousDiagrams;
+    let conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> | undefined;
+    let previousDiagrams: string[] | undefined;
 
     if (conversationHistoryStr) {
       try {
-        conversationHistory = JSON.parse(conversationHistoryStr);
+        conversationHistory = JSON.parse(conversationHistoryStr) as Array<{ role: 'user' | 'assistant'; content: string }>;
       } catch {
         // Invalid JSON, ignore
       }
@@ -98,7 +107,7 @@ export async function POST(request: NextRequest) {
 
     if (previousDiagramsStr) {
       try {
-        previousDiagrams = JSON.parse(previousDiagramsStr);
+        previousDiagrams = JSON.parse(previousDiagramsStr) as string[];
       } catch {
         // Invalid JSON, ignore
       }
@@ -111,6 +120,7 @@ export async function POST(request: NextRequest) {
       previousDiagrams,
       enableValidation,
       maxIterations,
+      enableSearch,
     });
 
     if (!validationResult.success) {
@@ -155,7 +165,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse files if provided
-    let parsedFiles;
+    let parsedFiles: Awaited<ReturnType<typeof parseMultipleFiles>> | undefined;
     if (files.length > 0) {
       try {
         parsedFiles = await parseMultipleFiles(files);
@@ -189,8 +199,131 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // =============================================================================
+    // WEB SEARCH INTEGRATION (Feature 6.0)
+    // =============================================================================
+
+    let searchContext: SearchContext | undefined;
+    const searchMetadata: {
+      searchUsed: boolean;
+      searchQuery?: string;
+      searchTokens?: number;
+      searchTime?: number;
+      searchError?: string;
+      citationCount?: number;
+      searchModel?: string;
+      searchCost?: number;
+    } = {
+      searchUsed: false,
+    };
+
+    // Check if search should be activated
+    if (enableSearch && FEATURES.WEB_SEARCH) {
+      try {
+        // Analyze if search is needed
+        const analysis = analyzeSearchNeed(validationResult.data.userRequest);
+
+        if (analysis.needsSearch) {
+          console.log('[Search] Trigger detected:', analysis.reasoning);
+
+          // Check rate limit and budget
+          if (!rateLimiter.canMakeRequest()) {
+            console.warn('[Search] Rate limit exceeded, skipping search');
+            searchMetadata.searchError = 'Rate limit exceeded';
+          } else if (!budgetTracker.canSpend(0.01)) {
+            console.warn('[Search] Daily budget limit reached, skipping search');
+            searchMetadata.searchError = 'Daily budget limit reached';
+          } else {
+            // Select appropriate model
+            const modelSelection = selectModel(analysis.searchQuery);
+            console.log('[Search] Using model:', modelSelection.model, '-', modelSelection.reasoning);
+
+            try {
+              // Perform search
+              const searchResult = await searchWithPerplexity({
+                query: analysis.searchQuery,
+                model: modelSelection.model,
+              });
+
+              // Build search context for diagram generation
+              searchContext = {
+                answer: searchResult.answer,
+                citations: searchResult.citations.map(c => ({
+                  url: c.url,
+                  title: c.title,
+                })),
+              };
+
+              // Record usage
+              usageTracker.record({
+                timestamp: new Date(),
+                query: analysis.searchQuery,
+                model: searchResult.modelUsed,
+                tokensInput: searchResult.tokensInput,
+                tokensOutput: searchResult.tokensOutput,
+                costUsd: searchResult.estimatedCostUsd,
+                success: true,
+              });
+
+              // Update rate limiter and budget tracker
+              rateLimiter.recordRequest();
+              budgetTracker.recordCost(searchResult.estimatedCostUsd);
+
+              // Update metadata
+              searchMetadata.searchUsed = true;
+              searchMetadata.searchQuery = analysis.searchQuery;
+              searchMetadata.searchTokens = searchResult.tokensTotal;
+              searchMetadata.searchTime = searchResult.searchTimeMs;
+              searchMetadata.citationCount = searchResult.citations.length;
+              searchMetadata.searchModel = searchResult.modelUsed;
+              searchMetadata.searchCost = searchResult.estimatedCostUsd;
+
+              console.log('[Search] Success:', {
+                tokens: searchResult.tokensTotal,
+                time: searchResult.searchTimeMs + 'ms',
+                citations: searchResult.citations.length,
+                cost: '$' + searchResult.estimatedCostUsd.toFixed(4),
+              });
+            } catch (searchError) {
+              // Log error but continue without search
+              console.error('[Search] Failed:', searchError);
+              searchMetadata.searchError = searchError instanceof Error ? searchError.message : 'Unknown error';
+
+              // Record failed attempt
+              usageTracker.record({
+                timestamp: new Date(),
+                query: analysis.searchQuery,
+                model: modelSelection.model,
+                tokensInput: 0,
+                tokensOutput: 0,
+                costUsd: 0,
+                success: false,
+                error: searchMetadata.searchError,
+              });
+            }
+          }
+        } else {
+          console.log('[Search] Not needed:', analysis.reasoning);
+        }
+      } catch (error) {
+        // Log error in search workflow but continue
+        console.error('[Search] Workflow error:', error);
+        searchMetadata.searchError = error instanceof Error ? error.message : 'Unknown error';
+      }
+    } else if (!FEATURES.WEB_SEARCH) {
+      console.log('[Search] Feature disabled (no API key configured)');
+    }
+
+    // =============================================================================
+    // DIAGRAM GENERATION
+    // =============================================================================
+
     // Generate diagram
-    let result;
+    let result: Awaited<ReturnType<typeof generateDiagram>>;
+
+    // Filter out parsing errors and type cast to ParsedFile[]
+    const validFiles = parsedFiles
+      ?.filter((f): f is import('@/lib/parsers').ParsedFile => !('error' in f));
 
     if (enableValidation) {
       // Generate with MCP Playwright validation feedback loop
@@ -199,9 +332,10 @@ export async function POST(request: NextRequest) {
       result = await generateWithFeedbackLoop(
         {
           userRequest: validationResult.data.userRequest,
-          files: parsedFiles?.filter((f) => !('error' in f)),
+          files: validFiles,
           conversationHistory: validationResult.data.conversationHistory,
           previousDiagrams: validationResult.data.previousDiagrams,
+          searchContext, // Feature 6.0
         },
         maxIterations
       );
@@ -209,19 +343,23 @@ export async function POST(request: NextRequest) {
       // Generate without validation
       result = await generateDiagram({
         userRequest: validationResult.data.userRequest,
-        files: parsedFiles?.filter((f) => !('error' in f)),
+        files: validFiles,
         conversationHistory: validationResult.data.conversationHistory,
         previousDiagrams: validationResult.data.previousDiagrams,
+        searchContext, // Feature 6.0
       });
     }
 
-    // Return result
+    // Return result with search metadata
     return NextResponse.json(
       {
         success: result.success,
         html: result.html,
         error: result.error,
-        metadata: result.metadata,
+        metadata: {
+          ...result.metadata,
+          ...searchMetadata, // Feature 6.0: Add search metadata
+        },
       },
       { status: result.success ? 200 : 500 }
     );

@@ -10,13 +10,13 @@
 import { createSupabaseAdminClient } from '@/lib/database/supabase-admin';
 import { getSubscriptionLimits } from '@/lib/database/helpers';
 import { getActiveSubscription } from './subscription-manager';
+import { UsageLimitError } from './types';
 import type {
   UsageType,
   RecordUsageInput,
   UsageLimitCheck,
   UsageStats,
   UsageResponse,
-  UsageLimitError,
 } from './types';
 
 // =============================================================================
@@ -111,12 +111,6 @@ export async function checkUsageLimit(userId: string, usageType: UsageType): Pro
   const limitCheck = await getUsageLimitCheck(userId, usageType);
 
   if (limitCheck.isLimitReached) {
-    const UsageLimitError = class extends Error {
-      constructor(type: UsageType, current: number, limit: number) {
-        super(`Usage limit exceeded for ${type}: ${current}/${limit}`);
-        this.name = 'UsageLimitError';
-      }
-    };
     throw new UsageLimitError(usageType, limitCheck.current, limitCheck.limit);
   }
 }

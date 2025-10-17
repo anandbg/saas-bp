@@ -1,7 +1,7 @@
 /**
  * Diagram Generation Module
  *
- * Uses OpenAI GPT-4 to generate HTML/Tailwind diagrams and illustrations
+ * Uses OpenAI GPT-4o to generate HTML/Tailwind diagrams and illustrations
  * Implements feedback loop with MCP Playwright validation
  */
 
@@ -11,7 +11,7 @@ import {
   buildFeedbackPrompt,
   extractHtmlFromResponse,
   validateGeneratedHtml,
-  DIAGRAM_VALIDATION_RULES,
+  type SearchContext,
 } from './diagram-prompt-template';
 import { validateDiagram } from '../validation/mcp-playwright';
 import type { ParsedFile } from '../parsers';
@@ -26,6 +26,7 @@ export interface DiagramGenerationRequest {
   files?: ParsedFile[];
   conversationHistory?: Array<{ role: string; content: string }>;
   previousDiagrams?: string[];
+  searchContext?: SearchContext;
 }
 
 export interface DiagramGenerationResult {
@@ -73,14 +74,15 @@ export async function generateDiagram(
       (file) => `**${file.fileName}**:\n${file.content}`
     );
 
-    // Build prompt
+    // Build prompt (with optional search context from Feature 6.0)
     const messages = buildDiagramPrompt(request.userRequest, {
       fileContents,
       previousDiagrams: request.previousDiagrams,
       conversationHistory: request.conversationHistory,
+      searchContext: request.searchContext,
     });
 
-    // Call OpenAI API
+    // Call OpenAI API with GPT-4o
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages,
@@ -114,7 +116,7 @@ export async function generateDiagram(
       html,
       error: validation.errors.length > 0 ? validation.errors.join(', ') : undefined,
       metadata: {
-        model: 'gpt-4o',
+        model: 'gpt-5',
         tokensUsed: response.usage?.total_tokens || 0,
         generationTime: Date.now() - startTime,
         validationPassed: validation.isValid,
@@ -127,7 +129,7 @@ export async function generateDiagram(
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
       metadata: {
-        model: 'gpt-4o',
+        model: 'gpt-5',
         tokensUsed: 0,
         generationTime: Date.now() - startTime,
         validationPassed: false,
@@ -154,7 +156,7 @@ export async function improveDiagram(
     // Build feedback prompt
     const messages = buildFeedbackPrompt(originalRequest, currentHtml, feedback);
 
-    // Call OpenAI API
+    // Call OpenAI API with GPT-4o
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages,
@@ -188,7 +190,7 @@ export async function improveDiagram(
       html,
       error: validation.errors.length > 0 ? validation.errors.join(', ') : undefined,
       metadata: {
-        model: 'gpt-4o',
+        model: 'gpt-5',
         tokensUsed: response.usage?.total_tokens || 0,
         generationTime: Date.now() - startTime,
         validationPassed: validation.isValid,
@@ -201,7 +203,7 @@ export async function improveDiagram(
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
       metadata: {
-        model: 'gpt-4o',
+        model: 'gpt-5',
         tokensUsed: 0,
         generationTime: Date.now() - startTime,
         validationPassed: false,

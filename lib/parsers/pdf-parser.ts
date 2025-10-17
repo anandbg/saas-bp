@@ -3,6 +3,7 @@
  * Handles .pdf files using pdf-parse
  */
 
+// @ts-ignore - pdf-parse doesn't have TypeScript definitions
 import pdf from 'pdf-parse/lib/pdf-parse.js';
 import type { ParsedFile } from './index';
 
