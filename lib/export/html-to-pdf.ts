@@ -3,6 +3,8 @@
  * Uses Playwright to convert HTML diagrams to PDF documents
  */
 
+import type { Page } from 'playwright-core';
+
 export interface PdfExportOptions {
   format?: 'A4' | 'Letter' | 'Legal';
   width?: string; // e.g., '8.5in', '210mm'
@@ -16,6 +18,52 @@ export interface PdfExportOptions {
     left?: string;
   };
   landscape?: boolean;
+  preserveAspectRatio?: boolean; // If true, calculates PDF size from content dimensions
+}
+
+/**
+ * Calculate actual content dimensions from rendered HTML
+ * @param page - Playwright page instance
+ * @param html - HTML content to measure
+ * @returns Content dimensions in pixels
+ */
+async function getContentDimensions(
+  page: Page,
+  html: string
+): Promise<{ width: number; height: number }> {
+  await page.setContent(html, {
+    waitUntil: 'networkidle',
+    timeout: 30000,
+  });
+
+  // Wait for dynamic content to render
+  await page.waitForTimeout(500);
+
+  // Measure actual content dimensions
+  const dimensions = await page.evaluate(() => {
+    const body = document.body;
+    const html = document.documentElement;
+
+    const width = Math.max(
+      body.scrollWidth,
+      body.offsetWidth,
+      html.clientWidth,
+      html.scrollWidth,
+      html.offsetWidth
+    );
+
+    const height = Math.max(
+      body.scrollHeight,
+      body.offsetHeight,
+      html.clientHeight,
+      html.scrollHeight,
+      html.offsetHeight
+    );
+
+    return { width, height };
+  });
+
+  return dimensions;
 }
 
 /**
@@ -41,20 +89,8 @@ export async function htmlToPdf(
     // Create new page
     const page = await browser.newPage();
 
-    // Set content and wait for network idle
-    await page.setContent(html, {
-      waitUntil: 'networkidle',
-      timeout: 30000, // 30 second timeout
-    });
-
-    // Wait for any dynamic content to render
-    await page.waitForTimeout(500);
-
-    // Generate PDF
-    const pdf = await page.pdf({
-      format: options.format || 'A4',
-      width: options.width,
-      height: options.height,
+    // Prepare PDF options
+    let pdfOptions: any = {
       printBackground: options.printBackground !== false, // Default true
       scale: options.scale || 1,
       margin: {
@@ -63,9 +99,40 @@ export async function htmlToPdf(
         bottom: options.margin?.bottom || '0.4in',
         left: options.margin?.left || '0.4in',
       },
-      landscape: options.landscape || false,
-      preferCSSPageSize: false, // Use our format settings
+    };
+
+    if (options.preserveAspectRatio) {
+      // Calculate actual content dimensions
+      const dimensions = await getContentDimensions(page, html);
+
+      // Convert pixels to inches (96 DPI standard for web)
+      const widthInches = dimensions.width / 96;
+      const heightInches = dimensions.height / 96;
+
+      // Set custom page size matching content aspect ratio
+      pdfOptions.width = `${widthInches}in`;
+      pdfOptions.height = `${heightInches}in`;
+      pdfOptions.preferCSSPageSize = false;
+    } else {
+      // Use traditional format-based export
+      pdfOptions.format = options.format || 'A4';
+      pdfOptions.width = options.width;
+      pdfOptions.height = options.height;
+      pdfOptions.landscape = options.landscape || false;
+      pdfOptions.preferCSSPageSize = false;
+    }
+
+    // Set content (again if dimensions were calculated, fresh if not)
+    await page.setContent(html, {
+      waitUntil: 'networkidle',
+      timeout: 30000, // 30 second timeout
     });
+
+    // Wait for any dynamic content to render
+    await page.waitForTimeout(500);
+
+    // Generate PDF with calculated or specified options
+    const pdf = await page.pdf(pdfOptions);
 
     return Buffer.from(pdf);
   } catch (error) {

@@ -167,11 +167,12 @@ async function exportToPPTX(html: string): Promise<Buffer> {
 
 /**
  * Export to PDF
+ * Now preserves aspect ratio from viewport by dynamically calculating PDF dimensions
  */
 async function exportToPDF(html: string): Promise<Buffer> {
   try {
     const buffer = await htmlToPdf(html, {
-      format: 'A4',
+      preserveAspectRatio: true, // NEW: Preserve viewport aspect ratio
       printBackground: true,
       scale: 1,
       margin: {
