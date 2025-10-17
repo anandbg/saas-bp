@@ -11,7 +11,6 @@ import {
   buildFeedbackPrompt,
   extractHtmlFromResponse,
   validateGeneratedHtml,
-  DIAGRAM_VALIDATION_RULES,
 } from './diagram-prompt-template';
 import { validateDiagram } from '../validation/mcp-playwright';
 import type { ParsedFile } from '../parsers';

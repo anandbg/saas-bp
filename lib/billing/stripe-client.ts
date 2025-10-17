@@ -8,6 +8,7 @@
  */
 
 import Stripe from 'stripe';
+import { FEATURES } from '@/lib/config/features';
 import type { StripePriceIds, PlanName, BillingInterval, PriceIdValidation } from './types';
 
 // =============================================================================
@@ -55,8 +56,10 @@ function validateStripeConfig(): void {
   }
 }
 
-// Validate configuration on module load
-validateStripeConfig();
+// Validate configuration on module load (only if STRIPE feature is enabled)
+if (FEATURES.STRIPE) {
+  validateStripeConfig();
+}
 
 // =============================================================================
 // STRIPE CLIENT INITIALIZATION
@@ -65,15 +68,18 @@ validateStripeConfig();
 /**
  * Stripe client instance
  * Configured with secret key and latest API version
+ * Returns a dummy client when STRIPE feature is disabled
  */
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia',
-  typescript: true,
-  appInfo: {
-    name: 'Radiology Reporting App',
-    version: '1.0.0',
-  },
-});
+export const stripe = FEATURES.STRIPE
+  ? new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: '2025-09-30.clover',
+      typescript: true,
+      appInfo: {
+        name: 'Radiology Reporting App',
+        version: '1.0.0',
+      },
+    })
+  : ({} as Stripe); // Dummy client when feature is disabled
 
 // =============================================================================
 // PRICE ID MAPPING
@@ -82,13 +88,21 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 /**
  * Stripe price IDs from environment variables
  * These should be set after creating products in Stripe Dashboard
+ * Uses dummy values when STRIPE feature is disabled
  */
-export const STRIPE_PRICE_IDS: StripePriceIds = {
-  professional_monthly: process.env.STRIPE_PRICE_PROFESSIONAL_MONTHLY!,
-  professional_yearly: process.env.STRIPE_PRICE_PROFESSIONAL_YEARLY!,
-  practice_monthly: process.env.STRIPE_PRICE_PRACTICE_MONTHLY!,
-  practice_yearly: process.env.STRIPE_PRICE_PRACTICE_YEARLY!,
-};
+export const STRIPE_PRICE_IDS: StripePriceIds = FEATURES.STRIPE
+  ? {
+      professional_monthly: process.env.STRIPE_PRICE_PROFESSIONAL_MONTHLY!,
+      professional_yearly: process.env.STRIPE_PRICE_PROFESSIONAL_YEARLY!,
+      practice_monthly: process.env.STRIPE_PRICE_PRACTICE_MONTHLY!,
+      practice_yearly: process.env.STRIPE_PRICE_PRACTICE_YEARLY!,
+    }
+  : {
+      professional_monthly: 'price_dummy',
+      professional_yearly: 'price_dummy',
+      practice_monthly: 'price_dummy',
+      practice_yearly: 'price_dummy',
+    };
 
 /**
  * Map Stripe price IDs to plan names
@@ -230,8 +244,11 @@ export function getAvailablePricesForPlan(planName: PlanName): {
 /**
  * Webhook signing secret from environment
  * Used to verify webhook signatures
+ * Uses dummy value when STRIPE feature is disabled
  */
-export const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!;
+export const STRIPE_WEBHOOK_SECRET = FEATURES.STRIPE
+  ? process.env.STRIPE_WEBHOOK_SECRET!
+  : 'whsec_dummy';
 
 /**
  * Verify webhook signature
@@ -327,7 +344,7 @@ export function logStripeConfig(): void {
   }
 
   console.log('🔧 Stripe Configuration:');
-  console.log('  API Version:', stripe.getApiField('version'));
+  console.log('  API Version:', '2025-09-30.clover');
   console.log('  Secret Key:', process.env.STRIPE_SECRET_KEY?.slice(0, 10) + '...');
   console.log('  Webhook Secret:', process.env.STRIPE_WEBHOOK_SECRET?.slice(0, 15) + '...');
   console.log('  Price IDs:', {

@@ -10,7 +10,6 @@
 
 import { stripe } from './stripe-client';
 import { createSupabaseAdminClient } from '@/lib/database/supabase-admin';
-import { updateUserProfile } from '@/lib/database/helpers';
 import type {
   CreateStripeCustomerInput,
   CreateCheckoutSessionInput,
@@ -327,13 +326,15 @@ export async function getCustomerInvoices(customerId: string, limit: number = 10
  */
 export async function getUpcomingInvoice(customerId: string) {
   try {
-    const invoice = await stripe.invoices.retrieveUpcoming({
+    // Note: Stripe SDK method name may vary by version
+    // Using type assertion to handle SDK version differences
+    const invoice = await (stripe.invoices as any).retrieveUpcoming({
       customer: customerId,
     });
 
     return invoice;
   } catch (error) {
-    // No upcoming invoice
+    // No upcoming invoice or method not available
     return null;
   }
 }

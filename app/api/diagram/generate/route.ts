@@ -192,6 +192,10 @@ export async function POST(request: NextRequest) {
     // Generate diagram
     let result;
 
+    // Filter out parsing errors and type cast to ParsedFile[]
+    const validFiles = parsedFiles
+      ?.filter((f): f is import('@/lib/parsers').ParsedFile => !('error' in f));
+
     if (enableValidation) {
       // Generate with MCP Playwright validation feedback loop
       // Note: MCP validation will be implemented in next step
@@ -199,7 +203,7 @@ export async function POST(request: NextRequest) {
       result = await generateWithFeedbackLoop(
         {
           userRequest: validationResult.data.userRequest,
-          files: parsedFiles?.filter((f) => !('error' in f)),
+          files: validFiles,
           conversationHistory: validationResult.data.conversationHistory,
           previousDiagrams: validationResult.data.previousDiagrams,
         },
@@ -209,7 +213,7 @@ export async function POST(request: NextRequest) {
       // Generate without validation
       result = await generateDiagram({
         userRequest: validationResult.data.userRequest,
-        files: parsedFiles?.filter((f) => !('error' in f)),
+        files: validFiles,
         conversationHistory: validationResult.data.conversationHistory,
         previousDiagrams: validationResult.data.previousDiagrams,
       });

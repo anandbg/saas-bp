@@ -14,7 +14,6 @@ import type {
   CreateSubscriptionInput,
   UpdateSubscriptionInput,
   PlanName,
-  BillingError,
 } from './types';
 
 // =============================================================================

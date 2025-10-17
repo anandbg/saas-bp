@@ -16,7 +16,6 @@ import type {
   UsageLimitCheck,
   UsageStats,
   UsageResponse,
-  UsageLimitError,
 } from './types';
 
 // =============================================================================

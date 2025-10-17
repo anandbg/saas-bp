@@ -252,7 +252,7 @@ export function DiagramPreview({
           <iframe
             ref={iframeRef}
             srcDoc={html || undefined}
-            sandbox="allow-scripts allow-same-origin"
+            sandbox="allow-scripts"
             className="w-full h-full border-0 min-h-[500px]"
             title="Diagram preview"
           />

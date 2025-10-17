@@ -12,13 +12,23 @@
  * - Responsive design validation
  */
 
-import { chromium } from 'playwright-core';
 import { OpenAI } from 'openai';
 import { DIAGRAM_VALIDATION_RULES } from '../ai/diagram-prompt-template';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+// Dynamic import for playwright-core to avoid bundling issues
+async function getPlaywrightChromium() {
+  try {
+    const { chromium } = await import('playwright-core');
+    return chromium;
+  } catch (error) {
+    console.error('Failed to load playwright-core:', error);
+    return null;
+  }
+}
 
 export interface ValidationResult {
   isValid: boolean;
@@ -61,6 +71,11 @@ export async function validateDiagram(
 
     try {
       // Check if Playwright is available
+      const chromium = await getPlaywrightChromium();
+      if (!chromium) {
+        throw new Error('Playwright not available');
+      }
+
       const browser = await chromium.launch({
         headless: true,
       });

@@ -84,6 +84,8 @@ export function useUsage(autoRefresh?: number): UsageState {
       const interval = setInterval(fetchUsage, autoRefresh);
       return () => clearInterval(interval);
     }
+
+    return undefined;
   }, [autoRefresh]);
 
   return {
