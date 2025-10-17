@@ -100,12 +100,14 @@ export function getModelConfig(): ModelConfig {
 
   if (gpt5Enabled) {
     // GPT-5 mode: New intelligent model selection
+    // NOTE: maxTokens for reasoning models must account for BOTH reasoning + output tokens
+    // Reasoning models can use 10,000+ tokens for thinking even on "minimal" effort
     return {
       primary: 'gpt-5',
       fallbackChain: ['o3-mini', 'gpt-4o'], // Three-tier availability
       reasoningEffort,
       temperature: 0.7,
-      maxTokens: 4000,
+      maxTokens: 16000, // High limit to allow for reasoning + output (was 4000)
     };
   }
 
@@ -185,7 +187,7 @@ export function selectModelForDiagram(
       model: 'gpt-5',
       reasoningEffort: 'minimal',
       temperature: 0.7,
-      maxTokens: 3000,
+      maxTokens: 12000, // High limit: reasoning models use many tokens for thinking (was 3000)
       costMultiplier: 0.7, // 30% cheaper due to minimal reasoning
     };
   }
@@ -196,7 +198,7 @@ export function selectModelForDiagram(
       model: 'gpt-5',
       reasoningEffort: 'high',
       temperature: 0.5, // Lower temperature for more focused reasoning
-      maxTokens: 6000,  // Allow more tokens for detailed output
+      maxTokens: 20000,  // Very high limit for complex diagrams with extensive reasoning (was 6000)
       costMultiplier: 1.3, // 30% more expensive due to high reasoning
     };
   }

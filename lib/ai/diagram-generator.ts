@@ -125,15 +125,20 @@ export async function generateDiagram(
         const apiParams: any = {
           model: currentModel,
           messages,
-          temperature: modelSelection.temperature,
-          max_tokens: modelSelection.maxTokens,
         };
 
-        // NEW: Add reasoning_effort for models that support it
-        if (supportsReasoningEffort(currentModel) && modelSelection.reasoningEffort) {
-          apiParams.reasoning = {
-            effort: modelSelection.reasoningEffort,
-          };
+        // Add model-specific parameters
+        if (supportsReasoningEffort(currentModel)) {
+          // Reasoning models (gpt-5*, o3*) use different parameters
+          apiParams.max_completion_tokens = modelSelection.maxTokens;
+          if (modelSelection.reasoningEffort) {
+            apiParams.reasoning_effort = modelSelection.reasoningEffort;
+          }
+          // Note: temperature not supported by reasoning models
+        } else {
+          // Non-reasoning models (gpt-4o, etc.) use standard parameters
+          apiParams.temperature = modelSelection.temperature;
+          apiParams.max_tokens = modelSelection.maxTokens;
         }
 
         // Call OpenAI API
@@ -316,15 +321,20 @@ export async function improveDiagram(
         const apiParams: any = {
           model: currentModel,
           messages,
-          temperature: modelSelection.temperature,
-          max_tokens: modelSelection.maxTokens,
         };
 
-        // NEW: Add reasoning_effort for models that support it
-        if (supportsReasoningEffort(currentModel) && modelSelection.reasoningEffort) {
-          apiParams.reasoning = {
-            effort: modelSelection.reasoningEffort,
-          };
+        // Add model-specific parameters
+        if (supportsReasoningEffort(currentModel)) {
+          // Reasoning models (gpt-5*, o3*) use different parameters
+          apiParams.max_completion_tokens = modelSelection.maxTokens;
+          if (modelSelection.reasoningEffort) {
+            apiParams.reasoning_effort = modelSelection.reasoningEffort;
+          }
+          // Note: temperature not supported by reasoning models
+        } else {
+          // Non-reasoning models (gpt-4o, etc.) use standard parameters
+          apiParams.temperature = modelSelection.temperature;
+          apiParams.max_tokens = modelSelection.maxTokens;
         }
 
         console.log(`[Model] Attempting improvement with ${currentModel}...`);
