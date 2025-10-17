@@ -4,7 +4,7 @@
  * Manages diagram generation with API integration
  * - Handles loading states
  * - Manages errors with retry logic (3 retries, exponential backoff)
- * - 90-second timeout for API calls
+ * - 5-minute timeout for API calls
  * - Integrates with conversation history and file uploads
  *
  * @example
@@ -27,7 +27,7 @@ import type { Message, GenerateResponse } from '@/types/diagram';
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY = 1000; // 1 second
 const MAX_RETRY_DELAY = 10000; // 10 seconds
-const REQUEST_TIMEOUT = 90000; // 90 seconds
+const REQUEST_TIMEOUT = 300000; // 5 minutes
 
 /**
  * Calculate exponential backoff delay
@@ -176,6 +176,7 @@ export function useDiagramGeneration(): UseDiagramGenerationResult {
         }
         setMetadata(result.metadata);
         setRetryAttempt(0);
+        setIsGenerating(false);
 
         console.log(`[useDiagramGeneration] Successfully generated diagram on attempt ${attempt + 1}`);
         return result;
@@ -208,7 +209,7 @@ export function useDiagramGeneration(): UseDiagramGenerationResult {
     let errorMessage: string;
     if (lastError) {
       if (lastError.name === 'AbortError') {
-        errorMessage = 'Request timed out after 90 seconds. Please try again with a simpler request.';
+        errorMessage = 'Request timed out after 5 minutes. Please try again with a simpler request.';
       } else if (lastError.message.includes('Failed to fetch')) {
         errorMessage = 'Network error. Please check your connection and try again.';
       } else {

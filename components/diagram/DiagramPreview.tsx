@@ -132,7 +132,7 @@ export function DiagramPreview({
           Generating diagram...
         </h3>
         <p className="text-sm text-gray-500 max-w-md">
-          This may take a few moments. We're creating your diagram with AI.
+          This may take a few moments. We&apos;re creating your diagram with AI.
         </p>
       </div>
     );
@@ -226,7 +226,7 @@ export function DiagramPreview({
 
           {/* Full Screen */}
           <button
-            onClick={handleFullScreen}
+            onClick={() => { void handleFullScreen(); }}
             className="p-2 rounded hover:bg-gray-200 transition-colors"
             aria-label={isFullScreen ? 'Exit fullscreen' : 'Enter fullscreen'}
           >

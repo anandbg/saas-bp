@@ -37,13 +37,13 @@ export function FileUpload({
 
       // Check individual file sizes
       const validFiles = acceptedFiles.filter(
-        (file) => file.size <= maxFileSize
+        (file: File) => file.size <= maxFileSize
       );
 
       // Check total size
-      const currentTotalSize = files.reduce((sum, file) => sum + file.size, 0);
+      const currentTotalSize = files.reduce((sum: number, file: File) => sum + file.size, 0);
       const newTotalSize = validFiles.reduce(
-        (sum, file) => sum + file.size,
+        (sum: number, file: File) => sum + file.size,
         currentTotalSize
       );
 
@@ -51,7 +51,7 @@ export function FileUpload({
         return;
       }
 
-      onFilesChange([...files, ...validFiles]);
+      onFilesChange([...files, ...validFiles] as File[]);
     },
     [files, onFilesChange, maxFiles, maxFileSize, maxTotalSize]
   );
@@ -69,10 +69,11 @@ export function FileUpload({
   };
 
   const getFileIcon = (file: File) => {
-    if (file.type.startsWith('image/')) {
+    const fileType = file.type as string;
+    if (fileType.startsWith('image/')) {
       return <ImageIcon size={16} strokeWidth={1.5} />;
     }
-    if (file.type === 'application/pdf') {
+    if (fileType === 'application/pdf') {
       return <FileText size={16} strokeWidth={1.5} />;
     }
     return <File size={16} strokeWidth={1.5} />;
@@ -88,7 +89,7 @@ export function FileUpload({
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+  const totalSize = files.reduce((sum: number, file: File) => sum + file.size, 0);
   const totalSizePercentage = (totalSize / maxTotalSize) * 100;
 
   return (

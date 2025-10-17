@@ -373,7 +373,36 @@
 - **Status**: ✅ Complete
 - **Commit**: Included in state-management commit
 
-### Phase 5: Export Functionality (100% Complete)
+### Phase 5: Export Functionality & UI Redesign (100% Complete)
+
+#### UI Redesign (January 2025)
+- **Status**: ✅ Complete
+- **File**: `app/page.tsx` (completely rebuilt)
+- **Design Aesthetic**: Linear/Stripe/Vercel style
+- **Key Changes**:
+  - ✅ Two-panel layout (Chat left, Diagram right)
+  - ✅ Integrated file upload inside chat panel (collapsible)
+  - ✅ Integrated export controls in diagram header
+  - ✅ White background with subtle borders
+  - ✅ Thinner font weights (semibold instead of bold)
+  - ✅ Tracking-tight for large text (-0.02em)
+  - ✅ 1.5 strokeWidth for all Lucide icons
+  - ✅ "AD" brand logo in header
+  - ✅ Empty states for chat and diagram
+  - ✅ Loading states with spinners
+  - ✅ Export status messages (inline in header)
+  - ✅ Status bar with connection indicator, metadata
+  - ✅ Responsive grid (cols-1 mobile, cols-2 desktop)
+- **Preserved Functionality**:
+  - ✅ useConversation hook (message history + persistence)
+  - ✅ useDiagramGeneration hook (retry logic + caching)
+  - ✅ File upload with drag-and-drop
+  - ✅ All export handlers (PPTX, PDF, PNG, HTML)
+  - ✅ Copy to clipboard
+  - ✅ Content-type validation
+  - ✅ Loading/success/error states
+  - ✅ Iframe sandbox security
+- **Commit**: `feat(ui): Complete UI redesign with Linear/Stripe/Vercel aesthetic`
 
 #### HTML to PNG Export
 - **File**: `lib/export/html-to-png.ts`
