@@ -60,34 +60,55 @@ export async function htmlToPngClient(
 }
 
 /**
- * Server-side HTML to PNG using MCP Playwright
+ * Server-side HTML to PNG using Playwright
+ * Launches headless Chromium browser to render HTML and capture screenshot
  */
 export async function htmlToPngServer(
   html: string,
   options: PngExportOptions = {}
 ): Promise<Buffer> {
-  // Use MCP Playwright browser to render and screenshot
   const { chromium } = await import('playwright-core');
 
-  const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage({
-    viewport: {
-      width: options.width || 1920,
-      height: options.height || 1080,
-    },
-  });
-
+  let browser;
   try {
-    await page.setContent(html, { waitUntil: 'networkidle' });
+    // Launch headless Chromium
+    browser = await chromium.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
 
+    // Create new page with viewport
+    const page = await browser.newPage({
+      viewport: {
+        width: options.width || 1920,
+        height: options.height || 1080,
+      },
+      deviceScaleFactor: options.scale || 2, // Retina display support
+    });
+
+    // Set content and wait for network idle (all resources loaded)
+    await page.setContent(html, {
+      waitUntil: 'networkidle',
+      timeout: 30000, // 30 second timeout
+    });
+
+    // Wait for any dynamic content to render
+    await page.waitForTimeout(500);
+
+    // Take full-page screenshot
     const screenshot = await page.screenshot({
       type: 'png',
       fullPage: true,
-      scale: options.scale === 1 ? 'css' : 'device',
     });
 
     return Buffer.from(screenshot);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`PNG generation failed: ${errorMessage}`);
   } finally {
-    await browser.close();
+    // Always close browser to prevent memory leaks
+    if (browser) {
+      await browser.close();
+    }
   }
 }

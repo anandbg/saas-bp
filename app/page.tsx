@@ -212,20 +212,37 @@ export default function Home() {
   };
 
   /**
-   * Download HTML file
+   * Download HTML file (standalone with CDN dependencies)
    */
-  const handleExportHTML = () => {
+  const handleExportHTML = async () => {
     if (!currentDiagram) {
       return;
     }
 
-    const blob = new Blob([currentDiagram], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `diagram-${Date.now()}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const response = await fetch('/api/diagram/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          html: currentDiagram,
+          format: 'html',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `diagram-${Date.now()}.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('HTML export failed:', err);
+    }
   };
 
   /**
@@ -325,7 +342,7 @@ export default function Home() {
                 onExportPPTX={async () => { await handleExportPPTX(); }}
                 onExportPDF={async () => { await handleExportPDF(); }}
                 onExportPNG={async () => { await handleExportPNG(); }}
-                onExportHTML={handleExportHTML}
+                onExportHTML={async () => { await handleExportHTML(); }}
                 onCopyClipboard={async () => { await handleCopyClipboard(); }}
                 disabled={isGenerating}
               />
