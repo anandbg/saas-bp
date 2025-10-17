@@ -8,6 +8,10 @@
  * - FileUpload for providing context via files
  * - DiagramPreview for viewing generated diagrams
  * - ExportPanel for exporting diagrams in multiple formats
+ *
+ * Uses state management hooks:
+ * - useConversation: Manages message history with sessionStorage persistence
+ * - useDiagramGeneration: Handles diagram generation with retry logic and caching
  */
 
 import { useState } from 'react';
@@ -17,100 +21,66 @@ import {
   DiagramPreview,
   ExportPanel,
 } from '@/components/diagram';
-import type { Message, GenerateResponse } from '@/types/diagram';
+import { useConversation } from '@/hooks/useConversation';
+import { useDiagramGeneration } from '@/hooks/useDiagramGeneration';
 
 export default function Home() {
-  // Conversation state
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | undefined>();
+  // Conversation management with persistence
+  const { messages, addMessage, clearConversation } = useConversation();
+
+  // Diagram generation with retry logic
+  const {
+    isGenerating,
+    error,
+    currentDiagram,
+    metadata,
+    generate,
+    setDiagram,
+  } = useDiagramGeneration();
 
   // File upload state
   const [files, setFiles] = useState<File[]>([]);
   const [fileError, setFileError] = useState<string | undefined>();
-
-  // Diagram state
-  const [currentDiagram, setCurrentDiagram] = useState<string | null>(null);
 
   /**
    * Handle sending a message and generating a diagram
    */
   const handleSendMessage = async (userMessage: string) => {
     // Add user message to conversation
-    const userMsg: Message = {
-      id: `msg-${Date.now()}-user`,
+    addMessage({
       role: 'user',
       content: userMessage,
-      timestamp: new Date(),
       files: files.length > 0 ? files.map(f => ({
         name: f.name,
         size: f.size,
         type: f.type,
       })) : undefined,
-    };
-    setMessages((prev) => [...prev, userMsg]);
-    setError(undefined);
-    setIsGenerating(true);
+    });
 
-    try {
-      // Build FormData for API request
-      const formData = new FormData();
-      formData.append('userRequest', userMessage);
-      formData.append('enableValidation', 'true');
-      formData.append('maxIterations', '5');
+    // Generate diagram using the hook (includes retry logic)
+    const result = await generate({
+      userRequest: userMessage,
+      files: files.length > 0 ? files : undefined,
+      conversationHistory: messages,
+      enableValidation: true,
+      maxIterations: 5,
+    });
 
-      // Append files if any
-      files.forEach((file) => {
-        formData.append('file', file);
-      });
-
-      // Include conversation history (previous messages only, not current)
-      if (messages.length > 0) {
-        formData.append('conversationHistory', JSON.stringify(messages));
-      }
-
-      // Call API
-      const response = await fetch('/api/diagram/generate', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const result = (await response.json()) as GenerateResponse;
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Failed to generate diagram');
-      }
-
-      // Add assistant response to conversation
-      const assistantMsg: Message = {
-        id: `msg-${Date.now()}-assistant`,
+    if (result && result.success) {
+      // Add success message to conversation
+      addMessage({
         role: 'assistant',
-        content: 'Generated diagram successfully!',
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
-
-      // Update current diagram
-      if (result.html) {
-        setCurrentDiagram(result.html);
-      }
+        content: `Generated diagram successfully! ${metadata ? `(Model: ${metadata.model}, Tokens: ${metadata.tokensUsed})` : ''}`,
+      });
 
       // Clear files after successful generation
       setFiles([]);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
-      setError(errorMessage);
-
-      // Add error message to conversation
-      const errorMsg: Message = {
-        id: `msg-${Date.now()}-error`,
+    } else {
+      // Add error message to conversation (error is already set by useDiagramGeneration)
+      addMessage({
         role: 'assistant',
-        content: `Error: ${errorMessage}`,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMsg]);
-    } finally {
-      setIsGenerating(false);
+        content: `Error: ${error || 'Failed to generate diagram'}`,
+      });
     }
   };
 
@@ -118,10 +88,9 @@ export default function Home() {
    * Handle clearing the conversation
    */
   const handleClearConversation = () => {
-    setMessages([]);
-    setCurrentDiagram(null);
+    clearConversation();
+    setDiagram(null);
     setFiles([]);
-    setError(undefined);
     setFileError(undefined);
   };
 
@@ -280,8 +249,8 @@ export default function Home() {
   const handleReloadDiagram = () => {
     // Force re-render by setting to null then back
     const temp = currentDiagram;
-    setCurrentDiagram(null);
-    setTimeout(() => setCurrentDiagram(temp), 10);
+    setDiagram(null);
+    setTimeout(() => setDiagram(temp), 10);
   };
 
   return (
@@ -313,7 +282,7 @@ export default function Home() {
             <div className="flex-1 bg-white rounded-lg shadow-sm p-6 overflow-hidden">
               <ChatInterface
                 messages={messages}
-                onSendMessage={handleSendMessage}
+                onSendMessage={(message) => { void handleSendMessage(message); }}
                 onClearConversation={handleClearConversation}
                 isLoading={isGenerating}
                 error={error}
@@ -353,11 +322,11 @@ export default function Home() {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <ExportPanel
                 html={currentDiagram}
-                onExportPPTX={handleExportPPTX}
-                onExportPDF={handleExportPDF}
-                onExportPNG={handleExportPNG}
+                onExportPPTX={async () => { await handleExportPPTX(); }}
+                onExportPDF={async () => { await handleExportPDF(); }}
+                onExportPNG={async () => { await handleExportPNG(); }}
                 onExportHTML={handleExportHTML}
-                onCopyClipboard={handleCopyClipboard}
+                onCopyClipboard={async () => { await handleCopyClipboard(); }}
                 disabled={isGenerating}
               />
             </div>
